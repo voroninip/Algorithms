@@ -1,0 +1,66 @@
+#include <iostream>
+
+using std::cin;
+using std::cout;
+using std::ios_base;
+
+int kth_byte(long long number, int k) { // байт числа number с номером k
+    return number >> (8 * k) & 255;
+}
+
+void counting_sort(long long*& array, int size, int k) { // стабильная сортировка подсчетом массива чисел по их k-тому байту
+    int* baskets = new int [256];
+
+    for (int i = 0; i < 256; i++) {
+        baskets[i] = 0;
+    }
+
+    for (int i = 0; i < size; i++) {
+        baskets[kth_byte(array[i], k)]++;
+    }
+
+    for (int i = 1; i < 256; i++) {
+        baskets[i] += baskets[i - 1];
+    }
+
+    long long* tmp = new long long[size];
+
+    for (int i = size - 1; i >= 0 ; i--) {
+        tmp[--baskets[kth_byte(array[i], k)]] = array[i];
+    }
+
+    for (int i = 0; i < size; i++) {
+        array[i] = tmp[i];
+    }
+
+    delete[] tmp;
+}
+
+void LSD_sort(long long*& array, int size) {
+    for (int i = 0; i < 8; i++) {
+        counting_sort(array, size, i);
+    }
+}
+
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+
+    int n;
+    cin >> n;
+    long long* array = new long long[n];
+
+    for(int i = 0; i < n; i++) {
+        cin >> array[i];
+    }
+
+    LSD_sort(array, n);
+
+    for(int i = 0; i < n; i++) {
+        cout << array[i] << " ";
+    }
+
+    delete[] array;
+}
