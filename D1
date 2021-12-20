@@ -1,0 +1,63 @@
+#include <iostream>
+#include <stack>
+#include <queue>
+
+using std::cin;
+using std::cout;
+using std::queue;
+using std::stack;
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    
+    int n;
+    cin >> n;
+    queue <int> beginning;
+    stack <int> first;
+    stack <int> second;
+    queue <int> answers;
+
+
+    for (int i = 0; i < n; i++) {
+        if (first.size() == 0) {
+            while (second.size() > 0) {
+                first.push(second.top());
+                second.pop();
+            }
+        }
+        while (first.size() + second.size() > beginning.size()) {
+            beginning.push(first.top());
+            first.pop();
+        }
+
+        char command;
+        cin >> command;
+
+        if (command == '-') {
+            answers.push(beginning.front());
+            beginning.pop();
+        }
+        else {
+            int number;
+            cin >> number;
+            if (command == '+') {
+                second.push(number);
+            }
+            else if (command == '*') {
+                if (beginning.size() == first.size() + second.size()) {
+                    beginning.push(number);
+                }
+                else {
+                    first.push(number);
+                }
+            }
+        }
+    }
+    while (!answers.empty()) {
+        cout << answers.front() << '\n';
+        answers.pop();
+
+    }
+}
