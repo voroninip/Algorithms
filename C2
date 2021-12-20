@@ -1,0 +1,126 @@
+#include <iostream>
+#include <algorithm>
+
+using std::cin;
+using std::cout;
+using std::swap;
+
+int kth_statistic(int*& array, int n, int l, int r, int k);
+
+int median(int*& array, int l, int r) { //
+    int sz =  r - l + 1;
+    int new_sz;
+    if (sz % 5 == 0) {
+        new_sz = sz/5;
+    } else {
+        new_sz = sz/5 + 1;
+    }
+    int* medians_array = new int[new_sz]; // создаём массив медиан
+    for (int i = 0; i <= sz; i += 5) { // разбиваем исходный массив на блоки по 5 элементов (с остатком), в каждом находим медиану
+        if (sz == i)  {
+            break;
+        }
+        if ((sz - i == 1) || (sz - i == 2)) {
+            medians_array[i/5] = array[l + i];
+        } else if (sz - i == 3) {
+            int* tmp = new int[3];
+            tmp[0] = array[l + i];
+            tmp[1] = array[l + i + 1];
+            tmp[2] = array[l + i + 2];
+            std::sort(tmp, tmp + 3);
+            medians_array[i/5] = tmp[1];
+            delete[] tmp;
+        } else if (sz - i == 4) {
+            int* tmp = new int[4];
+            tmp[0] = array[l + i];
+            tmp[1] = array[l + i + 1];
+            tmp[2] = array[l + i + 2];
+            tmp[3] = array[l + i + 3];
+            std::sort(tmp, tmp + 4);
+            medians_array[i/5] = tmp[1];
+            delete[] tmp;
+        } else {
+            int* tmp = new int[5];
+            tmp[0] = array[l + i];
+            tmp[1] = array[l + i + 1];
+            tmp[2] = array[l + i + 2];
+            tmp[3] = array[l + i + 3];
+            tmp[4] = array[l + i + 4];
+            std::sort(tmp, tmp + 5);
+            medians_array[i/5] = tmp[2];
+            delete[] tmp;
+        }
+    }
+    if ((new_sz == 1) || (new_sz == 2)) {
+        int mid = medians_array[0];
+        delete[] medians_array;
+        return mid;
+    } else {
+        return kth_statistic(medians_array, new_sz, 0, new_sz - 1, new_sz / 2); // возвращаем медиану массива медиан
+    }
+}
+
+int partition(int*& array, int n, int l, int r) {
+    int* sorted_array = new int[n]; // создаём временный массив в который запишем сначала ээлементы, меньшие разделителя, затем - равные, наконец, - большие
+    memcpy(sorted_array, array, n);
+    int i = l;
+    int pivot = median(array, l, r); // оптимальный разделитель - медиана массива медиан у сортируемого массива
+    for (int j = l ; j <= r; j++) {
+        if (array[j] < pivot) {
+            sorted_array[i] = array[j];
+            i++;
+        }
+    }
+    for (int j = l ; j <= r; j++) {
+        if (array[j] == pivot) {
+            sorted_array[i] = array[j];
+            i++;
+        }
+    }
+    for (int j = l ; j <= r; j++) {
+        if (array[j] > pivot) {
+            sorted_array[i] = array[j];
+            i++;
+        }
+    }
+    std::swap(sorted_array, array); // заносим изменение в рабочий массив, временный удаляем
+    delete[] sorted_array;
+    return pivot; //возвращаем действующий разделить
+}
+
+int kth_statistic(int*& array, int n, int l, int r, int k) {
+    int pivot = partition(array, n, l, r);
+    if (array[k] > pivot) { // если разделитель больше k-той статистики, работаем с "правой" частью массива
+        int i = r;
+        while (array[i] > pivot) {
+            i--;
+        }
+        kth_statistic(array, n, i + 1, r, k);
+    }
+    if (array[k] < pivot) { // если разделитель меньше k-той статистики, работаем с "левой" частью массива
+        int i = r;
+        while (array[i] >= pivot) {
+            i--;
+        }
+        kth_statistic(array, n, l, i, k);
+    }
+    return array[k];
+}
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int n, k;
+    cin >> n >> k;
+    int* array = new int[n];
+
+    for (int i = 0; i < n; i++) {
+        cin >> array[i];
+    }
+
+    cout << kth_statistic(array, n, 0, n - 1, k);
+
+    delete[] array;
+}
