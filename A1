@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 #include <vector>
 
 using std::vector;
@@ -12,56 +11,41 @@ int main() {
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    vector <string> commands;
     vector <int> values;
-    vector <int> answers;
 
     string s;
     while (cin >> s) {
-
-        if (s == "exit") {
-            break;
-        } 
         if (s == "push") {
             int n;
             cin >> n;
-            commands.push_back(s);
             values.push_back(n);
-        } else {
-            commands.push_back(s);
-            values.push_back(0);
-        }
-
-    }
-    
-    for (int i = 0; i < commands.size(); i++) {
-        if (commands[i] == "push") {
-            answers.push_back(values[i]);
             cout << "ok" << '\n';
         }
-        if (commands[i] == "pop") {
-            if (answers.empty()) {
+        if (s == "pop") {
+            if (values.empty()) {
                 cout << "error" << '\n';
             } else {
-                cout << answers[answers.size() - 1] << '\n';
-                answers.pop_back();
+                cout << values.back() << '\n';
+                values.pop_back();
             }
         }
-        if (commands[i] == "back") {
-            if (answers.empty()) {
+        if (s == "back") {
+            if (values.empty()) {
                 cout << "error" << '\n';
             } else {
-                cout << answers[answers.size() - 1] << '\n';
+                cout << values.back() << '\n';
             }
-        } 
-        if (commands[i] == "size") {
-            cout << answers.size() << '\n';
-        } 
-        if (commands[i] == "clear") {
-            answers.clear();
+        }
+        if (s == "size") {
+            cout << values.size() << '\n';
+        }
+        if (s == "clear") {
+            values.clear();
             cout << "ok" << '\n';
         }
+        if (s == "exit") {
+            cout << "bye";
+            break;
+        }
     }
-    cout << "bye";
 }
-
