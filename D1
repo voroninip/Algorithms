@@ -11,18 +11,16 @@ int main() {
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
-    
+
     int n;
     cin >> n;
     queue <int> beginning;
     stack <int> first;
     stack <int> second;
-    queue <int> answers;
-
 
     for (int i = 0; i < n; i++) {
-        if (first.size() == 0) {
-            while (second.size() > 0) {
+        if (first.empty()) {
+            while (!second.empty()) {
                 first.push(second.top());
                 second.pop();
             }
@@ -36,7 +34,7 @@ int main() {
         cin >> command;
 
         if (command == '-') {
-            answers.push(beginning.front());
+            cout << beginning.front() << '\n';
             beginning.pop();
         }
         else {
@@ -44,8 +42,7 @@ int main() {
             cin >> number;
             if (command == '+') {
                 second.push(number);
-            }
-            else if (command == '*') {
+            } else if (command == '*') {
                 if (beginning.size() == first.size() + second.size()) {
                     beginning.push(number);
                 }
@@ -54,10 +51,5 @@ int main() {
                 }
             }
         }
-    }
-    while (!answers.empty()) {
-        cout << answers.front() << '\n';
-        answers.pop();
-
     }
 }
