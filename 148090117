@@ -1,0 +1,39 @@
+#include <iostream>
+#include <vector>
+
+using std::cout;
+using std::cin;
+using std::vector;
+
+long long peaceful_sets (int n) {
+    vector <vector<long long>> dp_sum_max(n + 1, vector <long long>(n + 1)); // dp[i][j] contains amount of peaceful sets with sum = i (from 0 to n) and max element in set = j (from 0 to n)
+    for (int i = 0; i <= n; i++) { // there are 1 on diagonal
+        dp_sum_max[i][i] = 1;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j < i; j++) { // bottom-triangular matrix, because obviously sum >= max in any set
+            long long sum = 0;
+            for (int k = 0; k <= j/2; k++) { // from dp[i][j] we jump to dp[i-j][k] with 0<=k<=j/2, because without j: sum is (i-j) and 0<=max<=j/2 (condition of peaceful set)
+                sum += dp_sum_max[i - j][k];
+            }
+            dp_sum_max[i][j] = sum;
+        }
+    }
+
+    long long answer = 0;
+    for (int i = 0; i <= n; i++) { // as answer, we need number of peaceful sets with sum = n, and arbitrary max in set
+        answer += dp_sum_max[n][i];
+    }
+    return answer;
+}
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int n;
+    cin >> n;
+    cout << peaceful_sets(n);
+}
