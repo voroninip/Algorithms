@@ -1,0 +1,61 @@
+#include <iostream>
+#include <vector>
+
+using std::cout;
+using std::cin;
+using std::vector;
+
+int max(int a, int b) {
+    return (a > b ? a : b );
+}
+
+int answer (vector <int>& a, int n, vector <int>& b, int m) { // a is first sequence with length n and b is second one with length m
+// two layers for matrix counting
+    vector<int> layer_first(m + 1);
+    for (int i = 0; i <= m; i++) { // bottom row is zeroth
+        layer_first[i] = 0;
+    }
+
+    vector<int> layer_second(m + 1); // left column is zeroth
+    layer_second[0] = 0;
+
+// matrix dp[i][j] contains the length of LCS on prefix 0,1,...,i from first sequence and on prefix 0,1,...,j from second sequence
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
+            if (a[i - 1] == b[j - 1]) {
+                layer_second[j] = layer_first[j - 1] + 1; // diagonal in matrix
+            } else {
+                layer_second[j] = max(layer_first[j], layer_second[j - 1]); // from  top to bottom or from left to right
+            }
+        }
+        for (int k = 0; k <= m; k++) {
+            layer_first[k] = layer_second[k]; // copying layer_second to layer_first and layer_second is ready to refill (moving one row of the matrix down)
+        }
+    }
+
+    return layer_second[m]; // dp[n][m] is answer
+}
+
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int n;
+    cin >> n;
+    vector <int> sequence_first (n);
+    for (int i = 0; i < n; i++) {
+        cin >> sequence_first[i];
+    }
+
+    int m;
+    cin >> m;
+    vector <int> sequence_second (m);
+    for (int i = 0; i < m; i++) {
+        cin >> sequence_second[i];
+    }
+
+    cout << answer(sequence_first, n, sequence_second, m);
+}
