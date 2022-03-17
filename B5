@@ -28,7 +28,7 @@ void LNIS_indexes (vector <int>& array, int n, vector <int>& answer) { // Larges
     index_on[0] = -1;
 
     // for example, adding first element of array: array[0] = A, we have dp_last: {MIN, A, MAX, MAX, MAX,...}
-    // ancestor_of(0) is -1 (MIN on '-1' position and index_on(1) is 0 (on first place of dp_last we have A - 0-th element of array
+    // ancestor_of(0) is -1 (MIN on '-1' position) and index_on(1) is 0 (on first place of dp_last we have A - 0-th element of array)
 
     int last_pos = 1; // last used position (where set not inf)
 
