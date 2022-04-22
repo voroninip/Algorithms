@@ -1,0 +1,102 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using std::cout;
+using std::cin;
+using std::swap;
+using std::string;
+using std::vector;
+
+const int mod = 1'000'000'000 + 7;
+
+bool bit(const int mask, const int pos) {
+    return (mask >> pos) & 1;
+}
+
+int answer(const short n, const short m, const vector <vector<char>>& country) {
+    int comprehensive = (1 << n) - 1;
+    vector <vector<int>> compatible_mask_for(comprehensive + 1, vector <int>(0, 0));
+    for (int mask = 0; mask <= comprehensive; ++mask) {
+        bool is_alternating = true; // 10101010101 is alternating, ...10101011... is not
+        for (short pos = 0; pos < n - 1; ++pos) {
+            // .... y_1 x_1 ....
+            bool x_1 = bit(mask, pos);
+            bool y_1 = bit(mask, pos + 1);
+            if (x_1 == y_1) {
+                is_alternating = false;
+                break;
+            }
+        }
+        if (is_alternating) { // compatible mask for alternating is alternating too: mask or ~mask
+            compatible_mask_for[mask].push_back(mask);
+            compatible_mask_for[mask].push_back(mask ^ comprehensive);
+        } else { // compatible mask for not alternating is only one: ~mask
+            compatible_mask_for[mask].push_back(mask ^ comprehensive);
+        }
+    }
+
+    vector <vector<int>> dp(m, vector <int>(comprehensive + 1, 0)); // dp[i][mask] is number of Famine's solutions on the region of the first i lines with last line = mask
+    for (int mask = 0; mask <= comprehensive; ++mask) {
+        bool possible = true;
+        for (int pos = 0; pos < n; ++pos) {
+            if ((country[0][n - 1 - pos] == '-') && bit(mask, pos)) { // '-' corresponds to 0
+                possible = false;
+                break;
+            }
+            if ((country[0][n - 1 - pos] == '+') && !bit(mask, pos)) { // '+' corresponds to 1
+                possible = false;
+                break;
+            }
+        }
+        if (possible) {
+            dp[0][mask] = 1 % mod;
+        }
+    }
+
+    for (short i = 0; i < m - 1; ++i) {
+        for (int mask = 0; mask <= comprehensive; ++mask) {
+            for (auto next_mask: compatible_mask_for[mask]) {
+                bool possible = true;
+                for (int pos = 0; pos < n; ++pos) {
+                    if ((country[i + 1][n - 1 - pos] == '-') && bit(next_mask, pos)) { // '-' corresponds to 0
+                        possible = false;
+                        break;
+                    }
+                    if ((country[i + 1][n - 1 - pos] == '+') && !bit(next_mask, pos)) { // '+' corresponds to 1
+                        possible = false;
+                        break;
+                    }
+                }
+                if (possible) {
+                    dp[i + 1][next_mask] = (dp[i + 1][next_mask] + dp[i][mask]) % mod;
+                }
+            }
+        }
+    }
+    int result = 0;
+    for (int mask = 0; mask <= comprehensive; ++mask) {
+        result = (result + dp[m - 1][mask]) % mod; // the result is just the sum of dp[m-1][mask], where mask is arbitrary
+    }
+    return result;
+}
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    short n, m;
+    cin >> n >> m;
+
+    vector <vector<char>> country(m, vector <char>(n)); // I want to place country not like n*m, but just m*n
+    string s;
+    for (short i = 0; i < n; ++i) {
+        cin >> s;
+        for (short j = 0; j < m; ++j) {
+            country[j][i] = s[j];
+        }
+    }
+
+    cout << answer(n, m, country);
+}
