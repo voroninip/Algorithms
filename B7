@@ -1,0 +1,63 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+
+
+void dfs(int vertex, vector <vector<int>>& adjacency_list, vector <string>& color, vector <int>& time_in, vector <int>& time_out, int& time) {  // "time" is a timer for counting time_in - entrance, and time_out - exit
+    color[vertex] = "grey";
+    time_in[vertex] = time++;
+    for (int to: adjacency_list[vertex]) {
+        if (color[to] == "white") {
+            dfs(to, adjacency_list, color, time_in, time_out, time);
+        }
+    }
+    color[vertex] = "black";
+    time_out[vertex] = time++;
+}
+
+bool is_ancestor(int x, int y, vector <int>& time_in, vector <int>& time_out) {
+    return ((time_in[x] < time_in[y]) && (time_out[y] < time_out[x])); // the condition for being an ancestor is: in "dfs" we firstly visited the ancestor and only then the descendant, and we left at first the descendant, and only after him - the ancestor
+}
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int V; // the number of vertices
+    cin >> V;
+    vector <vector<int>> adjacency_list(V + 1, vector <int>());
+    int parent, root;
+
+    for (int i = 1; i <= V; ++i) {
+        cin >> parent;
+        if (parent == 0) {
+            root = i;
+        } else {
+            adjacency_list[parent].push_back(i);
+        };
+    }
+
+    vector <string> color(V + 1, "white");
+    vector <int> time_in(V + 1);
+    vector <int> time_out(V + 1);
+    int time = 0;
+
+    dfs(root, adjacency_list, color, time_in, time_out, time);
+
+    int m;
+    cin >> m;
+    int a, b; // vertices for paternity test
+    for (int i = 0; i < m; ++i) {
+        cin >> a >> b;
+        cout << is_ancestor(a, b, time_in, time_out) << "\n";
+    }
+}
