@@ -22,7 +22,7 @@ long long peaceful_sets(int n) {
     }
 
     long long answer = 0;
-    for (int i = 0; i <= n; i++) { // as answer, we need number of peaceful sets with sum = n, and arbitrary max in set
+    for (int i = 0; i <= n; i++) { // as answer, we need the number of peaceful sets with sum = n, and an arbitrary max in set
         answer += dp_sum_max[n][i];
     }
     return answer;
