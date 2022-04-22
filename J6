@@ -1,1 +1,65 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
 
+using std::cout;
+using std::cin;
+using std::swap;
+using std::vector;
+
+
+long long max(const long long a, const long long b) {
+    return (a > b ? a : b);
+}
+
+long long answer(int N, int M) {
+    if (N > M) {
+        swap(N, M); // For asymptotic, now we have yard with height = M and weight = N, where N <= M
+    }
+
+    vector <vector<long long>> dp(M + 1, vector <long long>(1 << N)); // dp[i][mask] is the number of different pretty patterns for yard with height = i, const weight = N, with layer = mask in the last (i-th) line
+    for (long long mask = 0; mask < (1 << N); ++mask) { // dp[1][mask] = 1, it is just an arbitrary first line, we set dp[0][mask] = 0
+        dp[1][mask] = 1;
+    }
+
+    for (int i = 2; i <= M; ++i) {
+        for (long long tmp_mask = 0; tmp_mask < (1 << N); ++tmp_mask) {
+            for (long long prev_mask = 0; prev_mask < (1 << N); ++prev_mask) {
+                bool pretty = true;
+                for (int pos = 0; pos < N - 1; ++pos) {
+                    /* x_2 under x_1 and y_2 under y_1:
+                    .... y_1 x_1 ....
+                    .... y_2 x_2 ....
+                    */
+                    bool x_1 = (prev_mask >> pos) & 1;
+                    bool y_1 = (prev_mask >> (pos + 1)) & 1;
+                    bool x_2 = (tmp_mask >> pos) & 1;
+                    bool y_2 = (tmp_mask >> (pos + 1)) & 1;
+
+                    if ((y_1 == x_1) && (y_1 == y_2) && (y_2 == x_2)) {
+                        pretty = false;
+                        break;
+                    }
+                }
+                if (pretty) {
+                    dp[i][tmp_mask] += dp[i-1][prev_mask];
+                }
+            }
+        }
+    }
+    long long sum = 0;
+    for (long long mask = 0; mask < (1 << N); ++mask) {
+        sum += dp[M][mask];
+    }
+    return sum;
+}
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int M, N;
+    cin >> M >> N;
+    cout << answer(N, M);
+}
