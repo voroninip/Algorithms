@@ -10,27 +10,23 @@ int max(int a, int b) {
     return (a > b ? a : b );
 }
 
-const int MAX = INT32_MAX; // inf
+const int MAX = INT32_MAX; // +inf
 const int MIN = INT32_MIN; // -inf
 
-void LNIS_indexes (vector <int>& array, int n, vector <int>& answer) { // Largest Non-Increasing Subsequence (LNIS)
-    std::reverse(array.begin(), array.end()); // reverse for finding LIS
-
-    vector <int> dp_last = vector <int> (n + 1); // dp[i] contains minimal last number in increasing subsequence with length i
+void LNIS_indexes (vector <int>& array, int n, vector <int>& answer) { // the Largest Non-Increasing Subsequence (LNIS) of given array
+    std::reverse(array.begin(), array.end()); // reverses array for finding the Largest Increasing Subsequence (LIS) in it
+    vector <int> dp_last = vector <int>(n + 1, MAX); // dp[i] contains minimal last number in increasing subsequence with length i
     dp_last[0] = MIN;
-    for (int i = 1; i <= n; i++) {
-        dp_last[i] = MAX;
-    }
     // now dp_last is {MIN, MAX, MAX, MAX, MAX,...}
 
-    vector <int> ancestor_of = vector <int> (n); // vector for ancestral chronology
-    vector <int> index_on = vector <int> (n + 1); // index of array's element on position at this moment
+    vector <int> ancestor_of = vector <int>(n); // vector for ancestral chronology
+    vector <int> index_on = vector <int>(n + 1); // index of array's element on temporary position of LIS at this moment
     index_on[0] = -1;
 
     // for example, adding first element of array: array[0] = A, we have dp_last: {MIN, A, MAX, MAX, MAX,...}
-    // ancestor_of(0) is -1 (MIN on '-1' position) and index_on(1) is 0 (on first place of dp_last we have A - 0-th element of array)
+    // ancestor_of(0) is -1 (MIN on '-1' position and index_on(1) is 0: on the first place of dp_last we have A - 0-th element of array)
 
-    int last_pos = 1; // last used position (where set not inf)
+    int last_pos = 1; // last used position (the last one, where set not inf)
 
     for (int i = 0; i < n; i++) {
         int pos = std::upper_bound(dp_last.begin(), dp_last.end(), array[i]) - dp_last.begin(); // binary search by array[i] to paste it in dp_last
@@ -60,9 +56,9 @@ int main() {
 
     LNIS_indexes(array, n, answer);
 
-    cout << answer.size() << "\n"; // the number of indexes in LNIS
+    cout << answer.size() << "\n"; // the number of elements in LNIS
 
-    for (int i : answer) { // indexes of LNIS
+    for (int i : answer) { // array's indexes of elements in LNIS
         cout << i << " ";
     }
 }
