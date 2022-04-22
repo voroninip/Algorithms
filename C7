@@ -1,0 +1,84 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+
+
+void dfs(int vertex, bool& cycle_is_found, vector <vector<int>>& adjacency_list, vector <string>& color, vector <int>& path, vector <int>& time_in, vector <int>& time_out, int& time) { // "time" is a timer for counting time_in - entrance, and time_out - exit, "path" is for building the cycle on vertices
+    if (cycle_is_found) {
+        return;
+    }
+    color[vertex] = "grey";
+    path.push_back(vertex);
+    time_in[vertex] = time++;
+    for (int to : adjacency_list[vertex]) {
+        if (cycle_is_found) {
+            return;
+        }
+        if (color[to] == "grey") { // visiting a grey vertex means that we visit it again - it is a cycle
+            path.push_back(to);
+            cycle_is_found = true;
+            return;
+        } else {
+            dfs(to, cycle_is_found, adjacency_list, color, path, time_in, time_out, time);
+        }
+    }
+    if (cycle_is_found) {
+        return;
+    }
+    color[vertex] = "black";
+    time_out[vertex] = time++;
+    path.pop_back();
+}
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int V, E;
+    cin >> V >> E;
+    vector <vector<int>> adjacency_list(V + 1, vector <int>());
+
+    int x, y;
+    for (int edge = 1; edge <= E; ++edge) {
+        cin >> x >> y;
+        adjacency_list[x].push_back(y);
+    }
+
+    vector <string> color(V + 1, "white");
+    vector <int> time_in(V + 1);
+    vector <int> time_out(V + 1);
+    vector <int> path;
+    bool cycle_is_found = false;
+    int time = 0;
+
+    for (int vertex = 1; vertex <= V; ++vertex) { // we are launching "dfs" for all connected components, until the cycle is not found or all vertices did not run out
+        if (color[vertex] == "white") {
+            dfs(vertex, cycle_is_found, adjacency_list, color, path, time_in, time_out, time);
+            if (cycle_is_found) {
+                break;
+            }
+        }
+    }
+    if (cycle_is_found) {
+        int last = path.back();
+        size_t tmp = path.size() - 2;
+        while (path[tmp] != last) { // walking throw the path backwards, until we encounter vertex "last"
+            --tmp;
+        }
+        cout << "YES\n";
+        while (tmp <= path.size() - 2) {
+            cout << path[tmp++] << " "; // walking throw the path directly and printing visited vertices, until we encounter vertex "last"  
+        }
+    } else {
+        cout << "NO";
+    }
+}
