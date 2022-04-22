@@ -53,11 +53,9 @@ int main() {
         cin >> array[i];
     }
     vector <int> answer;
-
     LNIS_indexes(array, n, answer);
 
     cout << answer.size() << "\n"; // the number of elements in LNIS
-
     for (int i : answer) { // array's indexes of elements in LNIS
         cout << i << " ";
     }
