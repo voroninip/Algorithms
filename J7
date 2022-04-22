@@ -1,0 +1,70 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <queue>
+#include <map>
+#include <set>
+#include <algorithm>
+
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::set;
+using std::map;
+using std::string;
+using std::vector;
+using std::stack;
+using std::queue;
+
+
+int min(const int a, const int b) {
+    return (a <= b ? a : b);
+}
+
+void euler(int vertex, vector <vector<int>>& adjacency_list, stack <int>& euler_circle) {
+    while (!adjacency_list[vertex].empty()) {
+        int to = adjacency_list[vertex].back();
+        adjacency_list[vertex].pop_back();
+        euler(to, adjacency_list, euler_circle);
+    }
+    euler_circle.push(vertex);
+}
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int V, A;
+    cin >> V >> A;
+    int E = 0;
+    vector <vector<int>> adjacency_list(V + 1, vector <int>());
+    stack <int> euler_circle;
+
+    bool label;
+    for (int i = 1; i <= V; ++i) {
+        for (int j = 1; j <= V; ++j) {
+            cin >> label;
+            if (!label && (i != j)) {
+                adjacency_list[i].push_back(j);
+                E += 1;
+            }
+        }
+    }
+
+    euler(A, adjacency_list, euler_circle);
+
+    if (E == 0) { // if there are no edges there is nothing to do
+        cout << " ";
+    } else {
+        cout << A << " ";
+        euler_circle.pop();
+        for (int vertex, counter = 1; euler_circle.size() > 1; euler_circle.pop(), ++counter) {
+            vertex = euler_circle.top();
+            cout << vertex << "\n" << vertex << " ";
+        }
+        cout << A;
+    }
+}
