@@ -15,7 +15,7 @@ const int MIN = INT32_MIN; // -inf
 
 void LNIS_indexes (vector <int>& array, int n, vector <int>& answer) { // the Largest Non-Increasing Subsequence (LNIS) of given array
     std::reverse(array.begin(), array.end()); // reverses array for finding the Largest Increasing Subsequence (LIS) in it
-    vector <int> dp_last = vector <int>(n + 1, MAX); // dp[i] contains minimal last number in increasing subsequence with length i
+    vector <int> dp_last = vector <int>(n + 1, MAX); // dp[i] contains minimal last number in increasing subsequence with length = i
     dp_last[0] = MIN;
     // now dp_last is {MIN, MAX, MAX, MAX, MAX,...}
 
