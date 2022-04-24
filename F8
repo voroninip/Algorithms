@@ -1,0 +1,79 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+using std::priority_queue;
+
+
+const long long MAX = INT32_MAX; // +inf
+const long long MIN = INT32_MIN; // -inf
+
+int min(const int a, const int b) {
+    return a < b ? a : b;
+}
+
+void Dijkstra(int t, vector <vector<pair<int, int>>>& adjacency_list, vector <int>& distance_to, priority_queue <pair<int, int>, vector<pair<int, int>>, std::greater<>>& unprocessed,  vector <bool>& visited) {
+    int vertex;
+    while (!unprocessed.empty()) {
+        vertex = unprocessed.top().second;
+        if ((vertex == t) || (unprocessed.top().first == MAX)) { // if temporary vertex is the required we can stop algorithm, or if the minimal distance for remaining vertices in processing heap is +inf, then there are no paths to them, and we can stop handling heap
+            return;
+        }
+        if (visited[vertex]) { // if the vertex have been already processed, we skip it
+            unprocessed.pop();
+            continue;
+        }
+        unprocessed.pop();
+        int to;
+        int weight;
+        visited[vertex] = true;
+        for (int i = 0; i < adjacency_list[vertex].size(); ++i) { // for all adjacent vertices of temporary one
+            to = adjacency_list[vertex][i].first;
+            weight = adjacency_list[vertex][i].second;
+            if (!visited[to]) { // updating possible distance for vertices in processing heap
+                distance_to[to] = min(distance_to[to], distance_to[vertex] + weight);
+                unprocessed.push(std::make_pair(distance_to[to], to));
+            }
+        }
+    }
+}
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int V, E; // 'V' is the number of vertices, 'E' is the number of edges
+    cin >> V >> E;
+    int s, t; // 's' is the starting vertex and 't' is the ending vertex
+    cin >> s >> t;
+    vector <vector<pair<int, int>>> adjacency_list(V+1, vector <pair<int, int>>());
+    vector <int> distance_to(V+1, MAX);
+    priority_queue <pair<int, int>, vector<pair<int, int>>, std::greater<>> unprocessed; // processing heap
+    vector <bool> visited(V+1, false);
+    unprocessed.push(std::make_pair(0, s));
+    distance_to[s] = 0;
+
+    int a, b; // edge's endpoints
+    int w; // edge's weight (>= 0)
+    for (int i = 1; i <= E; ++i) {
+        cin >> a >> b >> w;
+        adjacency_list[a].push_back(std::make_pair(b, w));
+        adjacency_list[b].push_back(std::make_pair(a, w));
+    }
+
+    Dijkstra(t, adjacency_list, distance_to, unprocessed, visited);
+    if (distance_to[t] == MAX) {
+        cout << "-1";
+    } else {
+        cout << distance_to[t];
+    }
+}
