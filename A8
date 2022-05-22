@@ -20,14 +20,18 @@ const int MAX = INT32_MAX; // +inf
 const int MIN = INT32_MAX; // -inf
 
 bool On_Chessboard(pair <int, int> field) {
-    if ((1 <= field.first and field.first <= 8) and (1 <= field.second and field.second <= 8)){
-        return true;
-    } else {
-        return false;
-    }
+    return ((1 <= field.first and field.first <= 8) and (1 <= field.second and field.second <= 8));
 }
 
-int BFS_meet_in_the_middle(vector <vector<int>>& adjacency_list, vector <int>& distance_to, queue <int>& from_beginning, vector <int>& parent_of, vector <int>& distance_from, queue <int>& from_destination, vector <int>& ancestor_of) {
+int BFS_meet_in_the_middle(int beginning, int destination, vector <vector<int>>& adjacency_list, vector <int>& parent_of, vector <int>& ancestor_of) {
+    queue <int> from_beginning; // breadth first search from beginning
+    from_beginning.push(beginning);
+    queue <int> from_destination; // breadth first search from destination
+    from_destination.push(destination);
+    vector <int> distance_to(89, MAX); // the distance from beginning TO vertex
+    distance_to[beginning] = 0;
+    vector <int> distance_from(89, MAX); // the distance FROM vertex to destination
+    distance_from[destination] = 0;
     for (int i = 1; ;++i) {
         if (i%2 == 1) {
             int vertex = from_beginning.front();
@@ -104,20 +108,12 @@ int main() {
             }
         }
     }
-    vector <int> distance_to(89, MAX); // the distance from beginning TO vertex
-    distance_to[beginning] = 0;
-    vector <int> distance_from(89, MAX); // the distance FROM vertex to destination
-    distance_from[destination] = 0;
-    queue <int> from_beginning; // breadth first search from beginning
-    from_beginning.push(beginning);
     vector <int> parent_of(89); // family tree for breadth first search from beginning
     parent_of[beginning] = -1;
-    queue <int> from_destination; // breadth first search from destination
-    from_destination.push(destination);
     vector <int> ancestor_of(89); // family tree breadth first search from destination
     ancestor_of[destination] = -1;
 
-    int meeting_point = BFS_meet_in_the_middle(adjacency_list, distance_to, from_beginning, parent_of, distance_from, from_destination, ancestor_of);
+    int meeting_point = BFS_meet_in_the_middle(beginning, destination, adjacency_list, parent_of, ancestor_of);
 
     // cout << distance_to[meeting_point] + distance_from[meeting_point] << "\n";
     vector <int> path;
