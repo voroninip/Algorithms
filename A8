@@ -1,0 +1,130 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <map>
+#include <cmath>
+#include <algorithm>
+
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+using std::map;
+using std::queue;
+using std::priority_queue;
+
+
+const int MAX = INT32_MAX; // +inf
+const int MIN = INT32_MAX; // -inf
+
+bool On_Chessboard(pair <int, int> field) {
+    return ((1 <= field.first and field.first <= 8) and (1 <= field.second and field.second <= 8));
+}
+
+int BFS_meet_in_the_middle(int beginning, int destination, vector <vector<int>>& adjacency_list, vector <int>& parent_of, vector <int>& ancestor_of) {
+    queue <int> from_beginning; // breadth first search from beginning
+    from_beginning.push(beginning);
+    queue <int> from_destination; // breadth first search from destination
+    from_destination.push(destination);
+    vector <int> distance_to(89, MAX); // the distance from beginning TO vertex
+    distance_to[beginning] = 0;
+    vector <int> distance_from(89, MAX); // the distance FROM vertex to destination
+    distance_from[destination] = 0;
+    for (int i = 1; ;++i) {
+        if (i%2 == 1) {
+            int vertex = from_beginning.front();
+            from_beginning.pop();
+            for (int to: adjacency_list[vertex]) {
+                if (distance_to[to] == MAX) {
+                    distance_to[to] = distance_to[vertex] + 1;
+                    from_beginning.push(to);
+                    parent_of[to] = vertex;
+                }
+                if (distance_from[to] != MAX) {
+                    return to;
+                }
+            }
+        } else {
+            int vertex = from_destination.front();
+            from_destination.pop();
+            for (int to: adjacency_list[vertex]) {
+                if (distance_from[to] == MAX) {
+                    distance_from[to] = distance_from[vertex] + 1;
+                    from_destination.push(to);
+                    ancestor_of[to] = vertex;
+                }
+                if (distance_to[to] != MAX) {
+                    return to;
+                }
+            }
+        }
+    }
+}
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    // matching between chessboard's fields and vertices' numbers
+    /*   a  b  c  d  e  f  g  h
+    * 1|11 12 13 14 15 16 17 18
+    * 2|21 22 23 24 25 26 27 28
+    * 3|31 32 33 34 35 36 37 38
+    * 4|41 42 43 44 45 46 47 48
+    * 5|51 52 53 54 55 56 57 58
+    * 6|61 62 63 64 65 66 67 68
+    * 7|71 72 73 74 75 76 77 78
+    * 8|81 82 83 84 85 86 87 88
+    */
+
+    map <char, int> number_of {{'a', 1}, {'b', 2}, {'c', 3}, {'d', 4}, {'e', 5}, {'f', 6}, {'g', 7}, {'h', 8}};
+    map <int, char> letter_on {{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}, {6, 'f'}, {7, 'g'}, {8, 'h'}};
+    string starting_field, finishing_field; // starting and finishing chessboard's fields
+    cin >> starting_field >> finishing_field;
+    int beginning = number_of.at(starting_field[0]) + (starting_field[1] - '0') * 10;
+    int destination = number_of.at(finishing_field[0]) + (finishing_field[1] - '0') * 10;
+    vector <vector<int>> adjacency_list(89, vector <int>());
+    for (int vertex = 11; vertex <= 88; ++vertex) {
+        if (vertex%10 == 0 or vertex%10 == 9) {
+            continue;
+        }
+        pair <int, int> field = std::make_pair(vertex/10, vertex % 10);
+        pair <int, int> NNW = std::make_pair(field.first - 2, field.second - 1); // North-North-West
+        pair <int, int> WNW = std::make_pair(field.first - 1, field.second - 2); // West-North-West
+        pair <int, int> WSW = std::make_pair(field.first + 1, field.second - 2); // West-South-West
+        pair <int, int> SSW = std::make_pair(field.first + 2, field.second - 1); // South-South-West
+        pair <int, int> SSE = std::make_pair(field.first + 2, field.second + 1); // South-South-East
+        pair <int, int> ESE = std::make_pair(field.first + 1, field.second + 2); // East-South-East
+        pair <int, int> ENE = std::make_pair(field.first - 1, field.second + 2); // East-North-East
+        pair <int, int> NNE = std::make_pair(field.first - 2, field.second + 1); // North-North-East
+        vector <pair<int, int>> on_knight_move = {NNW, WNW, WSW, SSW, SSE, ESE, ENE, NNE};
+        for (pair <int, int> jump: on_knight_move) {
+            if (On_Chessboard(jump)) {
+                adjacency_list[vertex].push_back(jump.first * 10 + jump.second);
+            }
+        }
+    }
+    vector <int> parent_of(89); // family tree for breadth first search from beginning
+    parent_of[beginning] = -1;
+    vector <int> ancestor_of(89); // family tree breadth first search from destination
+    ancestor_of[destination] = -1;
+
+    int meeting_point = BFS_meet_in_the_middle(beginning, destination, adjacency_list, parent_of, ancestor_of);
+
+    // cout << distance_to[meeting_point] + distance_from[meeting_point] << "\n";
+    vector <int> path;
+    for (int vertex = meeting_point; vertex != -1; vertex = parent_of[vertex]) {
+        path.push_back(vertex);
+    }
+    std::reverse(path.begin(), path.end());
+    for (int vertex = ancestor_of[meeting_point]; vertex != -1; vertex = ancestor_of[vertex]) {
+        path.push_back(vertex);
+    }
+    for (int vertex: path) {
+        cout << letter_on.at(vertex%10) << vertex/10 << "\n";
+    }
+}
