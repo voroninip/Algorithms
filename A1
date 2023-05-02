@@ -1,51 +1,51 @@
 #include <iostream>
 #include <vector>
 
-using std::vector;
-using std::cout;
 using std::cin;
+using std::cout;
 using std::string;
+using std::vector;
 
 int main() {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-    std::cout.tie(nullptr);
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
 
-    vector <int> values;
+  vector<int> values;
 
-    string s;
-    while (cin >> s) {
-        if (s == "push") {
-            int n;
-            cin >> n;
-            values.push_back(n);
-            cout << "ok" << '\n';
-        }
-        if (s == "pop") {
-            if (values.empty()) {
-                cout << "error" << '\n';
-            } else {
-                cout << values.back() << '\n';
-                values.pop_back();
-            }
-        }
-        if (s == "back") {
-            if (values.empty()) {
-                cout << "error" << '\n';
-            } else {
-                cout << values.back() << '\n';
-            }
-        }
-        if (s == "size") {
-            cout << values.size() << '\n';
-        }
-        if (s == "clear") {
-            values.clear();
-            cout << "ok" << '\n';
-        }
-        if (s == "exit") {
-            cout << "bye";
-            break;
-        }
+  string command;
+  while (cin >> command) {
+    if (command == "push") {
+      int n;
+      cin >> n;
+      values.push_back(n);
+      cout << "ok" << '\n';
     }
+    if (command == "pop") {
+      if (values.empty()) {
+        cout << "error" << '\n';
+      } else {
+        cout << values.back() << '\n';
+        values.pop_back();
+      }
+    }
+    if (command == "back") {
+      if (values.empty()) {
+        cout << "error" << '\n';
+      } else {
+        cout << values.back() << '\n';
+      }
+    }
+    if (command == "size") {
+      cout << values.size() << '\n';
+    }
+    if (command == "clear") {
+      values.clear();
+      cout << "ok" << '\n';
+    }
+    if (command == "exit") {
+      cout << "bye";
+      break;
+    }
+  }
 }
