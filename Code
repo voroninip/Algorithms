@@ -1,1 +1,110 @@
+#include <ctime>
+#include <iostream>
+#include <list>
+#include <vector>
+#include <set>
 
+using std::list;
+using std::vector;
+using std::set;
+
+vector<uint32_t> Eratosthenes_sieve(uint32_t N) {
+  vector<uint32_t> lpd(N + 1, 0); // least prime divisor
+  list<uint32_t> primes;
+
+  for (uint32_t i = 2; i <= N; ++i) {
+    if (lpd[i] == 0) {
+      lpd[i] = i;
+      primes.push_back(i);
+    }
+
+    for (auto p : primes) {
+      if ((p > lpd[i]) or (p * lpd[i] > N) or (i * p > N)) {
+        break;
+      }
+      lpd[i * p] = p;
+    }
+  }
+  return lpd;
+}
+
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  //long double start = clock();
+  vector<uint32_t>&& lpd = Eratosthenes_sieve(1'000'000'0);
+  //long double end = clock();
+  //std::cout << (end - start) * 1'000'000 / CLOCKS_PER_SEC << '\n';
+
+  uint32_t N;
+  std::cin >> N;
+
+  set<uint32_t> used_primes;
+
+  uint32_t a;
+  for (uint32_t i = 0; i < N; ++i) {
+    std::cin >> a;
+    uint32_t b = a;
+    set<uint32_t> tmp_primes;
+    while (a > 1) {
+      uint32_t tmp_lpd = lpd[a];
+
+      if (used_primes.count(tmp_lpd)) {
+        for (uint32_t j = b+1; ; ++j) {
+          b = j;
+          set<uint32_t> tmp_primes;
+          bool suitable = true;
+          while (b > 1) {
+            tmp_lpd = lpd[b];
+            if (used_primes.count(tmp_lpd)) {
+              suitable = false;
+              break;
+            }
+            tmp_primes.insert(tmp_lpd);
+            while (b % tmp_lpd == 0) {
+              b /= tmp_lpd;
+            }
+          }
+          if (!suitable) {
+            continue;
+          }
+          std::cout << j << ' ';
+          for (auto p : tmp_primes) {
+            used_primes.insert(p);
+          }
+          break;
+        }
+
+        for (uint32_t j = i+1; j < N; ++j) {
+          std::cin >> a;
+        }
+
+        uint32_t max_used_prime = 1;
+
+        for (++i; i < N; ++i) {
+          for (uint32_t next_p = max_used_prime + 1; ; ++next_p) {
+            if ((lpd[next_p] == next_p) and (!used_primes.count(next_p))) {
+              std::cout << next_p << ' ';
+              used_primes.insert(next_p);
+              max_used_prime = next_p;
+              break;
+            }
+          }
+        }
+        return 0;
+      }
+
+      tmp_primes.insert(tmp_lpd);
+      while (a % tmp_lpd == 0) {
+        a /= tmp_lpd;
+      }
+    }
+    std::cout << b << ' ';
+    for (auto p : tmp_primes) {
+      used_primes.insert(p);
+    }
+  }
+}
