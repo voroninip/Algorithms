@@ -1,1 +1,112 @@
+#include <iostream>
+#include <vector>
 
+using std::cin;
+using std::cout;
+using std::vector;
+using std::string;
+
+
+uint8_t in_sigma(char c) {
+  if (c == '#') {
+    return 0;
+  }
+  if ('A' <= c and c <= 'Z') {
+    return (c - 'A' + 1);
+  }
+  if ('a' <= c and c <= 'z') {
+    return (c - 'a' + 27);
+  }
+}
+
+uint64_t suffix_array_with_lcp(string& s) {
+  s += '#';
+  uint16_t n = s.size();
+  // sigma: # A...Z a...z, |sigma| = 1 + 26 + 26 = 53
+  uint8_t sigma = 53;
+  vector<uint16_t> cnt(53, 0);
+  vector<uint16_t> sorted(n);
+  for (uint16_t i = 0; i < n; ++i) {
+    ++cnt[in_sigma(s[i])];
+  }
+  for (uint8_t i = 1; i < sigma; ++i) {
+    cnt[i] += cnt[i - 1];
+  }
+  for (int i = n - 1; i >= 0; --i) {
+    sorted[--cnt[in_sigma(s[i])]] = i;
+  }
+
+  vector<uint16_t> eq_class(n);
+  eq_class[sorted[0]] = 0;
+  for (uint16_t i = 1; i < n; ++i) {
+    eq_class[sorted[i]] = eq_class[sorted[i-1]];
+    if (s[sorted[i]] != s[sorted[i-1]]) {
+      ++eq_class[sorted[i]];
+    }
+  }
+
+  vector<uint16_t> new_cnt(n, 0);
+  vector<uint16_t> new_sorted(n);
+  vector<uint16_t> new_eq_class(n);
+  uint16_t k = 1;
+  while (k < n) {
+    k *= 2;
+    for (uint16_t i = 0; i < n; ++i) {
+      new_sorted[i] = (sorted[i] >= k/2 ? sorted[i] - k/2 : (sorted[i] + 2*n - k/2)%n);
+    }
+    for (uint16_t i = 0; i < n; ++i) {
+      ++new_cnt[eq_class[i]];
+    }
+    for (uint16_t i = 1; i < n; ++i) {
+      new_cnt[i] += new_cnt[i-1];
+    }
+    for (int i = n - 1; i >= 0; --i) {
+      sorted[--new_cnt[eq_class[new_sorted[i]]]] = new_sorted[i];
+    }
+    new_eq_class[sorted[0]] = 0;
+    for (uint16_t i = 1; i < n; ++i) {
+      new_eq_class[sorted[i]] = new_eq_class[sorted[i-1]];
+      if (eq_class[sorted[i]] != eq_class[sorted[i-1]]) {
+        ++new_eq_class[sorted[i]];
+      } else if (eq_class[sorted[i] + k/2] != eq_class[sorted[i-1] + k/2]) {
+        ++new_eq_class[sorted[i]];
+      }
+    }
+    for (uint16_t i = 0; i < n; ++i) {
+      eq_class[i] = new_eq_class[i];
+      new_cnt[i] = 0;
+    }
+  }
+
+  vector<uint16_t> lcp(n-1, 0);
+  int tmp_lcp = 0;
+  for (uint16_t i = 0; i < n; ++i) {
+    tmp_lcp = std::max(tmp_lcp - 1, 0);
+    if (eq_class[i] == n-1) {
+      continue;
+    }
+    uint16_t next = sorted[eq_class[i] + 1];
+    while ((std::max(i, next) + tmp_lcp < n) and s[i + tmp_lcp] == s[next + tmp_lcp]) {
+      ++tmp_lcp;
+    }
+    lcp[eq_class[i]] = tmp_lcp;
+  }
+  uint64_t sum_length = 0;
+  for (uint16_t i = 1; i < n; ++i) {
+    uint16_t index = sorted[i];
+    sum_length += static_cast<uint64_t>((((n-1 /* # */ - index) *
+        (n-1 /* # */ - index + 1)) - (lcp[i-1] * (lcp[i-1] + 1)))/2);
+  }
+  return sum_length;
+}
+
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  std::string s;
+  std::cin >> s;
+  std::cout << suffix_array_with_lcp(s);
+}
