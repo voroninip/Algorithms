@@ -1,1 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
 
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+using std::priority_queue;
+using std::queue;
+
+
+const long long MAX = INT64_MAX; // +inf
+
+void Dijkstra(vector <vector<pair<int, int>>>& adjacency_list,
+              vector <long long>& distance_to, priority_queue <pair<long long, int>, 
+                  vector<pair<long long, int>>, std::greater<>>& unprocessed,  
+                  vector <bool>& visited) {
+  int vertex;
+  while (!unprocessed.empty()) {
+    vertex = unprocessed.top().second;
+    if (unprocessed.top().first == MAX) { 
+      // if the minimal distance for remaining vertices in processing heap is +inf,
+      // then there are no paths to them, and we can stop handling heap
+      return;
+    }
+    if (visited[vertex]) { // if the vertex have been already processed, we skip it
+      unprocessed.pop();
+      continue;
+    }
+    unprocessed.pop();
+    int to;
+    long long weight;
+    visited[vertex] = true;
+    for (int i = 0; i < adjacency_list[vertex].size(); ++i) { 
+      // for all adjacent vertices of temporary one
+      to = adjacency_list[vertex][i].first;
+      weight = static_cast<long long>(adjacency_list[vertex][i].second);
+      if (!visited[to]) { // updating possible distance for vertices in processing heap
+        distance_to[to] = std::min(distance_to[to], distance_to[vertex] + weight);
+        unprocessed.emplace(distance_to[to], to);
+      }
+    }
+  }
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  long long h;
+  cin >> h;
+  int a, b, c;
+  cin >> a >> b >> c;
+  if (a == 1 or b == 1 or c == 1) {
+    cout << h;
+    return 0;
+  }
+  if (a > b) {
+    swap(a, b);
+  }
+  if (a > c) {
+    swap(a, c);
+  }
+  vector <vector<pair<int, int>>> adjacency_list(a, vector <pair<int, int>>());
+  priority_queue <pair<long long, int>, 
+      vector<pair<long long, int>>, std::greater<>> unprocessed; // processing heap
+  queue <int> carriers;
+  vector <bool> infected(a, false);
+  carriers.push(1);
+  infected[1] = true;
+  while (!carriers.empty()) {
+    int remainder = carriers.front();
+    carriers.pop();
+    int next_b = (remainder + b) % a;
+    int next_c = (remainder + c) % a;
+    adjacency_list[remainder].emplace_back(next_b, b);
+    adjacency_list[remainder].emplace_back(next_c, c);
+    if (!infected[next_b]) {
+      unprocessed.emplace(MAX, next_b);
+      infected[next_b] = true;
+      carriers.push(next_b);
+    }
+    if (!infected[next_c]) {
+      unprocessed.emplace(MAX, next_c);
+      infected[next_c] = true;
+      carriers.push(next_c);
+    }
+  }
+
+  vector <long long> distance_to(a, MAX);
+  vector <bool> visited(a, false);
+  distance_to[1] = 0;
+  unprocessed.emplace(0, 1);
+  Dijkstra(adjacency_list, distance_to, unprocessed, visited);
+
+  long long answer = 0;
+  for (int remainder = 0; remainder < a; ++remainder) {
+    if (distance_to[remainder] >= h) {
+      continue;
+    }
+    answer += (h - distance_to[remainder] - 1)/a + 1;
+  }
+  cout << answer;
+}
