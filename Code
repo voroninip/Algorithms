@@ -1,1 +1,101 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <map>
+#include <cmath>
+#include <algorithm>
 
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+using std::map;
+using std::queue;
+using std::priority_queue;
+
+
+const int MAX = INT32_MAX; // +inf
+const int MIN = INT32_MAX; // -inf
+
+
+int Hungarian(int n, vector<vector<int>>& matrix, vector <int>& matching) {
+  vector<int> alpha(n + 1);
+  vector<int> beta(n + 1);
+  // hold potentials
+  vector<int> ancestor_of(n + 1); // for columns' ancestry
+
+  for (int i = 1; i <= n; ++i) {
+    matching[0] = i;
+    int column = 0;
+    vector<int> min_for_column(n + 1, MAX);
+    vector<bool> used(n + 1, false);
+    do {
+      used[column] = true;
+      int currentRow = matching[column];
+      int cmp = MAX;
+      int min_column = 0;
+      for (int j = 1; j <= n; ++j) {
+        if (!used[j]) {
+          int current = matrix[currentRow][j] - alpha[currentRow] - beta[j];
+          if (current < min_for_column[j]) {
+            min_for_column[j] = current;
+            ancestor_of[j] = column;
+          }
+          if (min_for_column[j] < cmp) {
+            cmp = min_for_column[j];
+            min_column = j;
+          }
+        }
+      }
+      for (int j = 0; j <= n; ++j) {
+        if (used[j]) {
+          alpha[matching[j]] += cmp;
+          beta[j] -= cmp;
+        } else {
+          min_for_column[j] -= cmp;
+        }
+      }
+      column = min_column;
+    } while (matching[column] != 0);
+    do {
+      int minColumn = ancestor_of[column];
+      matching[column] = matching[minColumn];
+      column = minColumn;
+    } while (column);
+  }
+
+  vector<int> result(n + 1);
+  for (int j = 1; j <= n; ++j) {
+    result[matching[j]] = j;
+  }
+  return -beta[0];
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n;
+  cin >> n;
+  vector<vector<int>> matrix(n + 1, vector <int>(n + 1));
+  for (int i = 1; i <= n; ++i) {
+    for (int j = 1; j <= n; ++j) {
+      cin >> matrix[i][j];
+    }
+  }
+
+  vector<int> matching(n + 1, 0);
+  int sum = Hungarian(n, matrix, matching);
+  vector<int> answer(n+1);
+  for (int i = 1; i <= n; ++i) {
+    answer[matching[i]] = i;
+  }
+
+  cout << sum << "\n";
+  for (int i = 1; i <= n; ++i){
+    cout << i << " " << answer[i] << "\n";
+  }
+}
