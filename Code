@@ -1,0 +1,90 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+
+class Heap {
+ private:
+  std::vector <long long> heap;
+
+ public:
+  void Exchange(int index_1, int index_2) {
+    std::swap(heap[index_1], heap[index_2]);
+  }
+
+  void Sift_Down(int index) {
+    while (index * 2 < heap.size()) {
+      int tmp = index * 2;
+      if (((index * 2 + 1) < heap.size()) && (heap[index * 2 + 1] < heap[index * 2])) {
+        tmp = index * 2 + 1;
+      }
+      if (heap[tmp] < heap[index]) {
+        Exchange(tmp, index);
+        index = tmp;
+      } else break;
+    }
+  }
+
+  void Sift_Up(int index) {
+    while (index != 0) {
+      if (heap[index] < heap[index / 2]) {
+        Exchange(index, index / 2);
+        index /= 2;
+      } else break;
+    }
+  }
+
+  long long Get_Max() {
+    return heap[0];
+  }
+
+  void Insert(long long x) {
+    heap.push_back(x);
+    Sift_Up(heap.size() - 1);
+  }
+
+  void Extract_Max() {
+    Exchange(0, heap.size()-1);
+    heap.pop_back();
+    Sift_Down(0);
+  }
+  
+  void Statistic_Till(int k) {
+    std::vector <long long> statistic;
+    for (int i = 1; i <= k; i++) {
+      statistic.push_back((-1) * Get_Max());
+      Extract_Max();
+    }
+    for (int i = k - 1; i >= 0; i--) {
+      std::cout << statistic[i] << " ";
+    }
+  }
+
+  void Change_Max(long long a) {
+    heap[0] = a;
+  }
+};
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n, k;
+  long long a, x, y;
+  std::cin >> n >> k >> a >> x >> y;
+  Heap* myHeap = new Heap();
+
+  for (int i = 1; i <= k; i++) {
+    a = (a * x + y) % 1073741824;
+    myHeap->Insert((int) (a * (-1)));
+  }
+
+  for (int i = k + 1; i <= n; i++) {
+    a = (a * x + y) % 1073741824;
+    if ((-1) * a > myHeap->Get_Max()) {
+      myHeap->Change_Max((int) ((-1) * a));
+      myHeap->Sift_Down(0);
+    }
+  }
+  myHeap->Statistic_Till(k);
+}
