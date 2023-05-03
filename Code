@@ -1,1 +1,112 @@
+#include <iostream>
+#include <vector>
 
+using std::cin;
+using std::cout;
+using std::vector;
+
+uint8_t in_sigma(char c) {
+  if (c == '#') {
+    return 0;
+  }
+  if ('A' <= c and c <= 'Z') {
+    return (c - 'A' + 1);
+  }
+  if ('a' <= c and c <= 'z') {
+    return (c - 'a' + 27);
+  }
+  return 0;
+}
+
+class Suffix_Array {
+ private:
+  uint32_t n;
+  vector<uint32_t> suff_arr;
+
+  void fill_suff_arr(const std::string& s) {
+    // sigma: # A...Z a...z, |sigma| = 1 + 26 + 26 = 53
+    uint8_t sigma = 53;
+    vector<uint32_t> cnt(53, 0);
+    suff_arr.resize(n);
+    for (uint32_t i = 0; i < n; ++i) {
+      ++cnt[in_sigma(s[i])];
+    }
+    for (uint8_t i = 1; i < sigma; ++i) {
+      cnt[i] += cnt[i - 1];
+    }
+    for (int i = static_cast<int>(n - 1); i >= 0; --i) {
+      suff_arr[--cnt[in_sigma(s[i])]] = i;
+    }
+
+    vector<uint32_t> eq_class(n);
+    eq_class[suff_arr[0]] = 0;
+    for (uint32_t i = 1; i < n; ++i) {
+      eq_class[suff_arr[i]] = eq_class[suff_arr[i-1]];
+      if (s[suff_arr[i]] != s[suff_arr[i-1]]) {
+        ++eq_class[suff_arr[i]];
+      }
+    }
+
+    vector<uint32_t> new_cnt(n, 0);
+    vector<uint32_t> new_sorted(n);
+    vector<uint32_t> new_eq_class(n);
+    uint32_t k = 1;
+    while (k <= n) {
+      k *= 2;
+      for (uint32_t i = 0; i < n; ++i) {
+        new_sorted[i] = (suff_arr[i] >= k/2 ? suff_arr[i] - k/2 : (suff_arr[i] + 2*n - k/2)%n);
+      }
+      for (uint32_t i = 0; i < n; ++i) {
+        ++new_cnt[eq_class[i]];
+      }
+      for (uint32_t i = 1; i < n; ++i) {
+        new_cnt[i] += new_cnt[i-1];
+      }
+      for (int i = static_cast<int>(n - 1); i >= 0; --i) {
+        suff_arr[--new_cnt[eq_class[new_sorted[i]]]] = new_sorted[i];
+      }
+      new_eq_class[suff_arr[0]] = 0;
+      for (uint32_t i = 1; i < n; ++i) {
+        new_eq_class[suff_arr[i]] = new_eq_class[suff_arr[i-1]];
+        if (eq_class[suff_arr[i]] != eq_class[suff_arr[i-1]]) {
+          ++new_eq_class[suff_arr[i]];
+          continue;
+        }
+        if (eq_class[suff_arr[i] + k/2] != eq_class[suff_arr[i-1] + k/2]) {
+          ++new_eq_class[suff_arr[i]];
+          continue;
+        }
+      }
+      for (uint32_t i = 0; i < n; ++i) {
+        eq_class[i] = new_eq_class[i];
+        new_cnt[i] = 0;
+      }
+    }
+  }
+
+ public:
+  explicit Suffix_Array(std::string& s) {
+    s += '#';
+    n = s.size();
+    fill_suff_arr(s);
+  }
+  ~Suffix_Array() = default;
+
+  vector<uint32_t> getSuffArray() {
+    return suff_arr;
+  }
+};
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  std::string s;
+  std::cin >> s;
+  Suffix_Array S(s);
+  vector<uint32_t> output = S.getSuffArray();
+  for (uint32_t i = 1; i < s.size(); ++i) {
+    std::cout << output[i] + 1 << ' ';
+  }
+}
