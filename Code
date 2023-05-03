@@ -1,1 +1,45 @@
+#include <iostream>
+#include <vector>
 
+using std::cout;
+using std::cin;
+using std::vector;
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  short n, m;
+  cin >> n >> m;
+  vector <int> first_array (n);
+  for (short i = 0; i < n; i++) {
+    cin >> first_array[i];
+  }
+
+  vector<int> second_array (m);
+  for (short i = 0; i < m; ++i) {
+    cin >> second_array[i];
+  }
+
+  vector<vector<int>> dp (n+1, vector<int> (m+1));
+
+  int answer = 0;
+
+  for (short i = 1; i <= n; ++i) {
+    int tmp_max = 0;
+    for (short j = 1; j <= m; ++j) {
+      if (first_array[i-1] == second_array[j-1]) {
+        dp[i][j] = tmp_max + 1;
+      } else {
+        dp[i][j] = dp[i-1][j];
+      }
+      if ((first_array[i-1] > second_array[j-1]) && (dp[i-1][j] > tmp_max)) {
+        tmp_max = dp[i - 1][j];
+      }
+      answer = std::max(dp[i][j], answer);
+    }
+  }
+
+  cout << answer;
+}
