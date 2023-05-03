@@ -1,1 +1,80 @@
+#include <algorithm>
+#include <bitset>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
+//____________________________________________________________________________________
+struct Point {
+  int16_t x;
+  int16_t y;
+  Point() = default;
+  Point(const Point&) = default;
+  ~Point() = default;
+  explicit Point(int16_t x, int16_t y): x(x), y(y) {}
+};
+
+double distance(const Point& A, const Point& B) {
+  int16_t x_dist = B.x - A.x;
+  int16_t y_dist = B.y - A.y;
+  return std::sqrt(static_cast<double >(x_dist*x_dist + y_dist*y_dist));
+}
+
+double most_dispersed_triangle(const std::vector<Point>& S) {
+  // S is supposed to be the set of pairwise distinct points
+  uint16_t N = S.size();
+  std::vector<std::pair<uint64_t, uint64_t>> dists;
+  for (uint64_t i = 0; i < N; ++i) {
+    for (uint64_t j = i + 1; j < N; ++j) {
+      dists.emplace_back(i, j);
+    }
+  }
+
+  auto cmp_per_dist = [&S = 
+                       std::as_const(S)](const std::pair<uint16_t, uint16_t>& M,
+                           const std::pair<uint16_t, uint16_t>& N) -> bool {
+    double dist1 = distance(S[M.first], S[M.second]);
+    double dist2 = distance(S[N.first], S[N.second]);
+    return (dist1 > dist2);
+  };
+  std::sort(dists.begin(), dists.end(), cmp_per_dist);
+
+  uint16_t n = N / 64;
+  std::vector<std::vector<std::bitset<64>>> adjacency_mask(
+      N,std::vector<std::bitset<64>>(n + 1, 0)); // 64 * 47 = 3008
+  for (auto P : dists) {
+    uint16_t line1 = P.first;
+    uint16_t byte1 = P.first / 64;
+    uint16_t bit1 = P.first % 64;
+
+    uint16_t line2 = P.second;
+    uint16_t byte2 = P.second / 64;
+    uint16_t bit2 = P.second % 64;
+
+    adjacency_mask[line1][byte2][bit2] = true;
+    adjacency_mask[line2][byte1][bit1] = true;
+    for (uint16_t byte = 0; byte <= n; ++byte) {
+      if ((adjacency_mask[line1][byte] & adjacency_mask[line2][byte]).any()) {
+        return fmax(0.5, distance(S[P.first], S[P.second]) / 2.0);
+      }
+    }
+  }
+  return 0;
+}
+//____________________________________________________________________________________
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+  std::cout.precision(20);
+
+  uint16_t N;
+  std::cin >> N;
+  std::vector<Point> S(N);
+  int16_t x, y;
+  for (uint16_t i = 0; i < N; ++i) {
+    std::cin >> x >> y;
+    S[i] = Point(x, y);
+  }
+  std::cout << most_dispersed_triangle(S);
+}
