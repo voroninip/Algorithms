@@ -1,1 +1,87 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
+using std::vector;
+using std::cout;
+using std::cin;
+using std::string;
+using std::ios_base;
+using std::pair;
+using std::make_pair;
+using std::min;
+using std::max;
+
+int extramax = 400'000;
+int extramin = -400'000;
+vector <pair<int, int>> Tree(extramax);
+
+void Build_Tree(int v, int LeftPos, int RightPos) {
+  if (LeftPos + 1 == RightPos) {
+    Tree[v].first = (int)((((long long)(RightPos) * (long long)(RightPos)) % 12345) + (((long long)(RightPos) * (long long)(RightPos) * (long long)(RightPos)) % 23456));
+    Tree[v].second = (int)((((long long)(RightPos) * (long long)(RightPos)) % 12345) + (((long long)(RightPos) * (long long)(RightPos) * (long long)(RightPos)) % 23456));
+    return;
+  }
+  int Mid = (LeftPos + RightPos) / 2;
+  Build_Tree(v * 2 + 1, LeftPos, Mid);
+  Build_Tree(v * 2 + 2, Mid, RightPos);
+  Tree[v].first = min(Tree[2 * v + 1].first, Tree[v * 2 + 2].first);
+  Tree[v].second = max(Tree[2 * v + 1].second, Tree[v * 2 + 2].second);
+}
+
+pair <int, int> Min_Max(int v, int LeftPos, int RightPos, int left, int Right) {
+  if (RightPos <= left) {
+    return make_pair(extramax, extramin);
+  }
+  if (Right <= LeftPos) {
+    return make_pair(extramax, extramin);
+  }
+  if ((left <= LeftPos) && (RightPos <= Right)) {
+    return Tree[v];
+  }
+  int Mid = (LeftPos + RightPos) / 2;
+  pair <int, int> LeftPair, RightPair;
+  LeftPair = Min_Max(v * 2 + 1, LeftPos, Mid, left, Right);
+  RightPair = Min_Max(v * 2 + 2, Mid, RightPos, left, Right);
+  return (make_pair(min(LeftPair.first, RightPair.first), max(LeftPair.second, RightPair.second)));
+}
+
+void Update_Tree(int v, int LeftPos, int RightPos, int i, int j) {
+  if (i < LeftPos) {
+    return;
+  }
+  if (i >= RightPos) {
+    return;
+  }
+  if (LeftPos + 1 == RightPos) {
+    Tree[v] = make_pair(j, j);
+    return;
+  }
+  int Mid = (LeftPos + RightPos) / 2;
+  Update_Tree(v * 2 + 1, LeftPos, Mid, i, j);
+  Update_Tree(v * 2 + 2, Mid, RightPos, i, j);
+  Tree[v].first = min(Tree[2 * v + 1].first, Tree[2 * v + 2].first);
+  Tree[v].second = max(Tree[2 * v + 1].second, Tree[2 * v + 2].second);
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n = 100'000;
+  Build_Tree(0, 0, n);
+  int k;
+  cin >> k;
+  int x, y;
+  for (int i = 0; i < k; ++i) {
+    cin >> x >> y;
+    if (x > 0) {
+      pair<int, int> res = Min_Max(0, 0, n, x - 1, y);
+      cout << res.second - res.first << "\n";
+    } else {
+      Update_Tree(0, 0, n, -x - 1, y);
+    }
+  }
+}
