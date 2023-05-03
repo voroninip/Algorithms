@@ -1,0 +1,46 @@
+#include <iostream>
+#include <vector>
+
+using std::vector;
+
+int64_t Peaceful_sets(int n) {
+  vector<vector<int64_t>> dp(n + 1, vector<int64_t>(n + 1));
+  // dp[sum][max] contains amount of peaceful sets with sum (from 0 to n)
+  // and max element (from 0 to n)
+  for (int i = 0; i <= n; ++i) {
+    // there are 1 on diagonal, because the only set with sum = max is {max}
+    dp[i][i] = 1;
+  }
+
+  for (int sum = 1; sum <= n; ++sum) {
+    for (int max = 1; max < sum; ++max) {
+      // bottom-triangular matrix, because obviously counter >= max in any set
+      int64_t counter = 0;
+      for (int new_max = 0; new_max <= max / 2; ++new_max) {
+        // from dp[sum][max] we jump to dp[sum-max][new_max] with
+        // 0 <= new_max <= max/2, because without max: counter is (sum-max)
+        // and 0 <= max <= max/2 (condition of peaceful set)
+        counter += dp[sum - max][new_max];
+      }
+      dp[sum][max] = counter;
+    }
+  }
+
+  int64_t answer = 0;
+  for (int i = 0; i <= n; ++i) {
+    // as answer, needed the number of peaceful sets with sum = n,
+    // with arbitrary max
+    answer += dp[n][i];
+  }
+  return answer;
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n;
+  std::cin >> n;
+  std::cout << Peaceful_sets(n);
+}
