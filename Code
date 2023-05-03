@@ -1,1 +1,101 @@
+#include <cmath>
+#include <iostream>
+#include <vector>
 
+using std::cin;
+using std::cout;
+using std::vector;
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n;
+  cin >> n;
+
+  vector<vector<vector<int64_t>>> dp(n + 1, vector<vector<int64_t>>());
+  // sum >= max > min > max / 2  and  min + max <= sum  =>  max <= sum * 2 / 3
+  for (int sum = 0; sum <= n; ++sum) {
+    int max_bound = std::ceil(sum * 2 / 3);
+    dp[sum] = vector<vector<int64_t>>(max_bound + 1);
+    for (int max = 0; max <= max_bound; ++max) {
+      dp[sum][max].resize(max - std::floor(max / 2) + 1);
+    }
+  }
+  // dp[sum][M][m] contains amount of militant sets with sum (from 0 to n),
+  // max = M (from 0 to n), min = m (from 0 to n)
+  // for (int i = 0; i <= n; ++i) {
+  // there are 1 on diagonal, because the only set with sum = max: it is {max}
+  // dp[i][i][i] = 1;
+  // }
+
+  // under the line x=y=z
+  for (int sum = 1; sum < n; ++sum) {
+    for (int M = 1; M + std::floor(M / 2) + 1 <= sum; ++M) {
+      for (int m = std::floor(M / 2) + 1; m <= sum - M and m < M; ++m) {
+        // bottom-triangular 3-d matrix, because obviously counter >= max >= min in any set
+        int64_t counter = 0;
+        if (m + M == sum) {
+          ++counter;
+        }
+        for (int new_m = m + 1; new_m < M; ++new_m) {
+          for (int new_M = new_m; new_M < M and new_M <= sum - M - m; ++new_M) {
+            // from dp[sum][M][m] we jump to dp[sum - M - m][new_M][new_m] with
+            // new_m < new_M < M, m + 1 <= new_m < M and [M / 2 + 1] <= m < M
+            // (condition of militant set)
+            if (new_m == new_M and new_m == sum - M - m) { // case min = max = sum
+              ++counter;
+              continue;
+            }
+            if (new_m + new_M > sum - M - m or new_M > sum * 2 / 3) {
+              continue;
+            }
+            counter += dp[sum - M - m][new_M][new_m - std::floor(new_M / 2) - 1];
+          }
+        }
+        dp[sum][M][m - std::floor(M / 2) - 1] = counter;
+      }
+    }
+  }
+
+  int64_t answer = 0;
+  /*
+  for (int M = std::floor((std::sqrt(24 * n + 1) - 1) / 3); M <= n * 2 / 3; ++M) {
+    for (int m = std::floor(M / 2) + 1; m <= M; ++m) {
+      if (m + M > n) {
+        continue;
+      }
+      // as answer, we need the number of peaceful sets with sum = n, and an arbitrary
+      // max and min
+      answer += dp[n][M][m - std::floor(M / 2) - 1];
+    }
+  }
+  */
+  for (int M = 1; M + std::floor(M / 2) + 1 <= n; ++M) {
+    for (int m = std::floor(M / 2) + 1; m <= n - M and m < M; ++m) {
+      // bottom-triangular 3-d matrix, because obviously counter >= max >= min in any set
+      int64_t counter = 0;
+      if (m + M == n) {
+        ++counter;
+      }
+      for (int new_m = m + 1; new_m < M; ++new_m) {
+        for (int new_M = new_m; new_M < M and new_M <= n - M - m; ++new_M) {
+          // from dp[sum][M][m] we jump to dp[sum - M - m][new_M][new_m] with
+          // new_m < new_M < M, m + 1 <= new_m < M and [M / 2 + 1] <= m < M
+          // (condition of militant set)
+          if (new_m == new_M and new_m == n - M - m) { // case min = max = sum
+            ++counter;
+            continue;
+          }
+          if (new_m + new_M > n - M - m or new_M > n * 2 / 3) {
+            continue;
+          }
+          counter += dp[n - M - m][new_M][new_m - std::floor(new_M / 2) - 1];
+        }
+      }
+      answer += (dp[n][M][m - std::floor(M / 2) - 1] = counter);
+    }
+  }
+  cout << answer + 1;
+}
