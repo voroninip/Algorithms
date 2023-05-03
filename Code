@@ -1,1 +1,111 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
 
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::string;
+using std::vector;
+using std::queue;
+
+const int MAX = INT32_MAX; // +inf
+
+void BFS(int V, int total_vertices, int vertex, int& min_cycle_length,
+         vector <vector<int>>& adjacency_list) {
+  vector <int> parent_of(total_vertices + 1, 0);
+  vector <int> wave_of(total_vertices + 1, 0);
+  queue <int> carriers;
+  vector <bool> infected(total_vertices + 1, false);
+  infected[vertex] = true;
+  carriers.push(vertex);
+  parent_of[vertex] = 0;
+  wave_of[vertex] = 0;
+  while (!carriers.empty()) {
+    int carrier = carriers.front();
+    carriers.pop();
+    for (int next: adjacency_list[carrier]) {
+      if (parent_of[carrier] == next) {
+        continue;
+      }
+      if (infected[next]) {
+        min_cycle_length = std::min(wave_of[next] + wave_of[carrier] + 1,
+                                min_cycle_length);
+        return;
+      }
+      infected[next] = true;
+      parent_of[next] = carrier;
+      wave_of[next] = wave_of[carrier] + 1;
+      carriers.push(next);
+    }
+  }
+}
+
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int V, E; // 'V' is the number of vertices(squares) and 'E' is the number of edges(streets)
+  cin >> V >> E;
+  vector<vector<int>> adjacency_list(V + 1, vector <int>());
+  int min_parallel_edges_sum = MAX;
+  int min_cycle_length = MAX;
+  int total_vertices = V;
+
+  vector<vector<pair<int, int>>> weights_of_edge(
+      V + 1,vector<pair<int, int>>(V + 1, std::make_pair(MAX, MAX)));
+  int beginning, destination, weight;
+  for (int i = 1; i <= E; ++i) {
+    cin >> beginning >> destination >> weight;
+    if (weight < weights_of_edge[beginning][destination].first) {
+      weights_of_edge[destination][beginning].second =
+          weights_of_edge[beginning][destination].second =
+              weights_of_edge[beginning][destination].first;
+      weights_of_edge[destination][beginning].first =
+          weights_of_edge[beginning][destination].first = weight;
+    } else if (weight < weights_of_edge[beginning][destination].second) {
+      weights_of_edge[destination][beginning].second =
+          weights_of_edge[beginning][destination].second = weight;
+    }
+    if (weights_of_edge[beginning][destination].second < MAX) {
+      min_parallel_edges_sum = std::min(min_parallel_edges_sum,
+                                   weights_of_edge[beginning][destination].first +
+                                   weights_of_edge[beginning][destination].second);
+    }
+  }
+
+  for (int start = 1; start < V; ++start) {
+    for (int end = start; end <= V; ++end) {
+      int length = weights_of_edge[start][end].first;
+      if (length == MAX) {
+        continue;
+      }
+      if (length >= 2) {
+        total_vertices += length - 1;
+        int tmp_V = adjacency_list.size() - 1; // tmp_V = (V + 1) - 1 = V
+        adjacency_list.resize(tmp_V + 1 + length - 1);
+        adjacency_list[start].push_back(tmp_V + 1);
+        adjacency_list[tmp_V + 1].push_back(start);
+        for (int j = 1; j <= length - 2; ++j) {
+          adjacency_list[tmp_V + j].push_back(tmp_V + j + 1);
+          adjacency_list[tmp_V + j + 1].push_back(tmp_V + j);
+        }
+        adjacency_list[tmp_V + length - 1].push_back(end);
+        adjacency_list[end].push_back(tmp_V + length - 1);
+      } else {
+        adjacency_list[end].push_back(start);
+        adjacency_list[start].push_back(end);
+      }
+    }
+  }
+
+  for (int vertex = 1; vertex <= V; ++vertex) {
+    BFS(V, total_vertices, vertex, min_cycle_length, adjacency_list);
+  }
+
+  cout << std::min(min_cycle_length, min_parallel_edges_sum);
+}
