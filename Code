@@ -1,1 +1,44 @@
+#include <iostream>
+#include <list>
+#include <vector>
 
+using std::list;
+using std::vector;
+
+uint64_t Eratosthenes_sieve(uint32_t N) {
+  vector<uint32_t> lpd(N + 1, 0); // least prime divisor
+  list<uint32_t> primes;
+
+  for (uint32_t i = 2; i <= N; ++i) {
+    if (lpd[i] == 0) {
+      lpd[i] = i;
+      primes.push_back(i);
+    }
+
+    for (auto p : primes) {
+      if ((p > lpd[i]) or (p * lpd[i] > N) or (i * p > N)) {
+        break;
+      }
+      lpd[i * p] = p;
+    }
+  }
+  uint64_t sum = 0;
+  for (uint32_t i = 2; i <= N; ++i) {
+    if (lpd[i] == i) {
+      continue;
+    }
+    sum += lpd[i];
+  }
+
+  return sum;
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  uint32_t N;
+  std::cin >> N;
+  std::cout << Eratosthenes_sieve(N);
+}
