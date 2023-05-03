@@ -1,1 +1,125 @@
+#include <algorithm>
+#include <cstring>
+#include <iostream>
+#include <vector>
+#include <queue>
 
+using std::queue;
+using std::string;
+using std::vector;
+
+int mod_pow(int x, int mod, uint32_t pow) {
+  int result = 1;
+  for (uint32_t i = 1; i <= pow; ++i) {
+    result *= x;
+    result %= mod;
+  }
+  return result;
+}
+
+int Aho_Corasick(uint32_t n, vector<string>& vocabulary) {
+  struct Node {
+    int to[26] = {};
+    bool terminal = false;
+    // uint32_t length = 0;
+    // string path = "";
+    Node() {
+      std::memset(to, -1, sizeof(to));
+    }
+  };
+
+  vector<Node> trie;
+  uint32_t root = 0;
+  trie.emplace_back(); // root
+  for (uint32_t i = 0; i < vocabulary.size(); ++i) {
+    uint32_t vertex = root;
+    for (char c : vocabulary[i]) {
+      if (trie[vertex].to[c - 'a'] == -1) {
+        trie[vertex].to[c - 'a'] = trie.size();
+        trie.emplace_back();
+      }
+      uint32_t next = trie[vertex].to[c - 'a'];
+      // trie[next].path = trie[vertex].path + c;
+      vertex = next;
+    }
+    trie[vertex].terminal = true;
+    // trie[vertex].length = vocabulary[i].size();
+  }
+
+  uint32_t V = trie.size();
+  vector<uint32_t> link(V);
+  link[root] = 0; // formally incorrect: empty string has not own suffix
+  // vector<uint32_t> compressed_link(V);
+  // compressed_link[root] = 0; // formally incorrect: empty string has not own suffix
+  vector<vector<uint32_t>> go(V, vector<uint32_t>(26));
+  for (char c = 'a'; c <= 'z'; ++c) {
+    go[root][c - 'a'] = (trie[root].to[c - 'a'] != -1 ? trie[root].to[c - 'a'] : root);
+  }
+
+  queue<uint32_t> q;
+  q.push(root);
+  while (!q.empty()) {
+    uint32_t vertex = q.front();
+    q.pop();
+    for (char c = 'a'; c <= 'z'; ++c) {
+      int next = trie[vertex].to[c - 'a'];
+      if (next == -1) {
+        continue;
+      }
+      link[next] = (vertex == root ? root : go[link[vertex]][c - 'a']);
+      trie[next].terminal += trie[link[next]].terminal;
+      for (char ch = 'a'; ch <= 'z'; ++ch) {
+        go[next][ch - 'a'] = (trie[next].to[ch - 'a'] != -1 ? 
+            trie[next].to[ch - 'a'] : go[link[next]][ch - 'a']);
+      }
+      // compressed_link[next] = (trie[link[next]].terminal ?
+      // link[next] : compressed_link[link[next]]);
+      q.push(next);
+    }
+  }
+
+  int mod = 10000;
+  uint32_t fictive = trie.size();
+  trie.emplace_back();
+  vector<vector<int>> paths(n + 1, vector<int>(trie.size(), 0));
+  // paths[length][destination]
+  paths[0][root] = 1;
+  for (int i = 1; i <= n; ++i) {
+    for (uint32_t vertex = root; vertex < V; ++vertex) {
+      if (trie[vertex].terminal) {
+        continue;
+      }
+      for (char c = 'a'; c <= 'z'; ++c) {
+        uint32_t next = (go[vertex][c - 'a'] == -1 ? fictive : go[vertex][c - 'a']);
+        paths[i][next] += paths[i - 1][vertex];
+        paths[i][next] %= mod;
+      }
+    }
+  }
+
+  int sum = 0;
+  for (uint32_t vertex = root; vertex < trie.size(); ++vertex) {
+    if (!trie[vertex].terminal) {
+      sum += paths[n][vertex];
+      sum %= mod;
+    }
+  }
+
+  return (mod_pow(26, mod, n) + mod - sum) % mod;
+}
+
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  uint32_t n, k;
+  std::cin >> n >> k;
+  vector<string> vocabulary(k);
+  for (uint32_t i = 0; i < k; ++i) {
+    std::cin >> vocabulary[i];
+  }
+
+  std::cout << Aho_Corasick(n, vocabulary);
+}
