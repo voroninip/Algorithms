@@ -1,1 +1,81 @@
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <vector>
 
+using std::cout;
+using std::cin;
+using std::string;
+using std::vector;
+
+string common_substring(string& string_larger, int larger_length,
+                        string& string_lesser, int lesser_length) {
+  // параметры: строка большей длины, её длина, строка меньшей длины, её длина
+  // слои для пересчёта dp (морока с большей/меньшей длиной строк, чтобы слои были 
+  // меньшей длины - ширина матрицы не больше высоты и слои горизонтальные)
+  vector <int> layer_first (lesser_length + 1);
+  vector <int> layer_second (lesser_length + 1);
+
+  vector <vector<bool>> path (larger_length, vector<bool> (lesser_length));
+  // массив символов для хронологии переходов по dp:  true - сверху вниз,
+  // false - слева направо
+
+  for (int i = 1; i <= larger_length; ++i) { 
+    // пересчёт dp по двум слоям и заполнение path
+    for (int j = 1; j <= lesser_length; ++j) {
+      if (string_larger[i - 1] == string_lesser[j - 1]) {
+        layer_second[j] = layer_first[j - 1] + 1;
+      } else {
+        layer_second[j] = std::max(layer_first[j], layer_second[j - 1]);
+        if (layer_first[j] >= layer_second[j - 1]) {
+          path[i - 1][j - 1] = true;
+        } else {
+          path[i - 1][j - 1] = false;
+        }
+      }
+    }
+    for (int k = 0; k <= lesser_length; ++k) { 
+      // копируем в верхний слой нижний, нижний можно не обнулять,
+      // а заполнять по-новому (то есть сдвигаем оба слоя на один столбец вниз)
+      layer_first[k] = layer_second[k];
+    }
+  }
+  string common; // общая подстрока
+  for (int i = larger_length - 1, j = lesser_length - 1; (i >= 0) && (j >= 0); ) { 
+    // восстановление подстроки с помощью хронологии переходов в path
+    if (string_larger[i] == string_lesser[j]) {
+      common += string_larger[i];
+      i -= 1;
+      j -= 1;
+    } else if (path[i][j]) {
+      i -= 1;
+    } else if (!path[i][j]) {
+      j -= 1;
+    }
+  }
+  reverse(common.begin(), common.end());
+  return common;
+}
+
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  string string_first;
+  cin >> string_first;
+  int length_first = string_first.length();
+
+  string string_second;
+  cin >> string_second;
+  int length_second = string_second.length();
+
+  if (length_second < length_first) {
+    cout << common_substring(string_first, length_first,
+                             string_second, length_second);
+  } else {
+    cout << common_substring(string_second, length_second,
+                             string_first, length_first);
+  }
+}
