@@ -1,1 +1,89 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
+using std::cin;
+using std::cout;
+using std::pair;
+using std::string;
+using std::vector;
+using std::make_pair;
+using std::min;
+using std::max;
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int N, M;
+  cin >> N >> M;
+  vector<int> A(N);
+  for (int i = 0; i < N; ++i) {
+    cin >> A[i];
+  }
+
+  vector<int> V(1, 1);
+  while (V[V.size() - 1] < N) {
+    V.push_back(V[V.size() - 1] << 1);
+  }
+  int depth;
+  depth = V.size();
+  V.push_back(V[depth - 1] << 1);
+
+  vector<vector<pair<pair<int,int>,int>>> Subsidiary(N);
+  for (int i = 0; i < N; ++i) {
+    Subsidiary[i].resize(depth);
+    Subsidiary[i][0] = make_pair(make_pair(A[i], i), INT_MAX);
+  }
+
+  vector<int> Min_Depth(N + 1);
+  int j = 1;
+  for (int i = 1; i < N + 1; ++i) {
+    if (i >= V[j]) {
+      ++j;
+    }
+    Min_Depth[i] = j - 1;
+  }
+
+  pair<pair<int,int>,int> FirstMember, SecondMember;
+  for (int j = 1; j < depth; ++j) {
+    for (int i = 0; i < N; ++i) {
+      if (i + V[j - 1] >= N) {
+        Subsidiary[i][j] = Subsidiary[i][j - 1];
+        continue;
+      }
+
+      FirstMember = Subsidiary[i][j - 1];
+      SecondMember = Subsidiary[i + V[j - 1]][j - 1];
+      Subsidiary[i][j].first.first = min(FirstMember.first.first, SecondMember.first.first);
+
+      if (FirstMember.first.first < SecondMember.first.first) {
+        Subsidiary[i][j].first.second = FirstMember.first.second;
+      } else {
+        Subsidiary[i][j].first.second = SecondMember.first.second;
+      }
+      if (FirstMember.first.second != SecondMember.first.second) {
+        Subsidiary[i][j].second = min(FirstMember.second, min(SecondMember.second, max(FirstMember.first.first, SecondMember.first.first)));
+      } else {
+        Subsidiary[i][j].second = min(FirstMember.second, SecondMember.second);
+      }
+    }
+  }
+
+  int LeftPos, RightPos, dif;
+  for (int i = 0; i < M; ++i) {
+    cin >> LeftPos >> RightPos;
+    --LeftPos;
+    dif = Min_Depth[RightPos - LeftPos];
+    FirstMember = Subsidiary[LeftPos][dif];
+    SecondMember = Subsidiary[RightPos - V[dif]][dif];
+    if (FirstMember.first.second != SecondMember.first.second) {
+      cout << min(FirstMember.second, min(SecondMember.second, max(FirstMember.first.first, SecondMember.first.first))) << "\n";
+    }
+    else {
+      cout << min(FirstMember.second, SecondMember.second) << "\n";
+    }
+  }
+}
