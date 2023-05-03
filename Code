@@ -1,1 +1,69 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
 
+using std::vector;
+
+int64_t Merge(vector<int64_t>& arr, vector<int64_t>& mas, int left, int right) {
+  int64_t inverses = 0;
+  int64_t index_1, index_2;
+
+  int64_t middle = (left + right) / 2;
+  index_1 = left;
+  index_2 = middle + 1;
+  for (int i = left; i <= right; i++)
+    if ((index_1 <= middle) && (index_2 > right)) {
+      mas[i] = arr[index_1];
+      index_1++;
+    }
+    else if ((index_1 > middle) && (index_2 <= right)) {
+      mas[i] = arr[index_2];
+      index_2++;
+    }
+    else if ((index_1 > middle) && (index_2 > right)) {
+      break;
+    }
+    else if ((arr[index_1] <= arr[index_2]) && ((index_1 <= middle) && (index_2 <= right))) {
+      mas[i] = arr[index_1];
+      index_1++;
+    }
+    else if ((arr[index_1] > arr[index_2]) && ((index_1 <= middle) && (index_2 <= right))) {
+      mas[i] = arr[index_2];
+      inverses += middle - index_1 + 1;
+      index_2++;
+    }
+
+  for (int i = left; i <= right; i++) {
+    arr[i] = mas[i];
+  }
+  return inverses;
+};
+
+int64_t Merge_tmp(vector<int64_t>& array, vector<int64_t>& tmp, int first, int last) {
+  int64_t inverses = 0;
+  if (first < last) {
+    inverses += Merge_tmp(array, tmp, first, (first + last) / 2);
+    inverses += Merge_tmp(array, tmp, (first + last) / 2 + 1, last);
+    inverses += Merge(array, tmp, first, last);
+  }
+  return inverses;
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+  std::ifstream cin("inverse.in");
+  std::ofstream cout("inverse.out");
+
+  int n;
+  cin >> n;
+
+  vector<int64_t> array(n + 1);
+  vector<int64_t> tmp(n + 1);
+
+  for (int i = 1; i <= n; i++) {
+    cin >> array[i];
+  }
+  cout << Merge_tmp(array, tmp, 1, n);
+}
