@@ -1,1 +1,91 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
+using std::vector;
+using std::cout;
+using std::cin;
+using std::string;
+using std::ios_base;
+using std::pair;
+using std::make_pair;
+using std::min;
+using std::max;
+
+vector<int> Segment_Tree;
+
+int Sgn_Parity(int i) {
+  if (i % 2 == 0) {
+    return 1;
+  }
+  return -1;
+}
+
+void Build_Tree(int v, int LeftPos, int RightPos, vector <int>& Array) {
+  if (LeftPos + 1 == RightPos) {
+    Segment_Tree[v] = Array[LeftPos] * Sgn_Parity(LeftPos);
+    return;
+  }
+  int Mid = (LeftPos + RightPos) / 2;
+  Build_Tree(v * 2 + 1, LeftPos, Mid, Array);
+  Build_Tree(v * 2 + 2, Mid, RightPos, Array);
+  Segment_Tree[v] = Segment_Tree[2 * v + 1] + Segment_Tree[2 * v + 2];
+}
+
+int Alternating_Sum(int v, int LeftPos, int RightPos, int Left, int Right) {
+  if ((RightPos <= Left) || (Right <= LeftPos)) {
+    return 0;
+  }
+  if ((Left <= LeftPos) && (RightPos <= Right)) {
+    return Segment_Tree[v];
+  }
+  int mid = (LeftPos + RightPos) / 2;
+  return (Alternating_Sum(2 * v + 1, LeftPos, mid, Left, Right) + Alternating_Sum(2 * v + 2, mid, RightPos, Left, Right));
+}
+
+void Update_Tree(int v, int LeftPos, int RightPos, int i, int j) {
+  if (LeftPos + 1 == RightPos) {
+    Segment_Tree[v] = j * Sgn_Parity(LeftPos);
+    return;
+  }
+  int Mid = (LeftPos + RightPos) / 2;
+  if (i < Mid) {
+    Update_Tree(2 * v + 1, LeftPos, Mid, i, j);
+  }
+  if (Mid <= i) {
+    Update_Tree(2 * v + 2, Mid, RightPos, i, j);
+  }
+  Segment_Tree[v] = Segment_Tree[2 * v + 1] + Segment_Tree[2 * v + 2];
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n;
+  cin >> n;
+
+  vector <int> A(n);
+  for (int i = 0; i < n; ++i) {
+    cin >> A[i];
+  }
+
+  Segment_Tree.resize(4 * n, 0);
+  Build_Tree(0, 0, n, A);
+
+  int m;
+  cin >> m;
+
+  int label, i_l, j_r;
+  for (int i = 0; i < m; ++i) {
+    cin >> label >> i_l >> j_r;
+    if (label == 1) {
+      cout << Sgn_Parity(i_l - 1) * Alternating_Sum(0, 0, n, i_l - 1, j_r) << "\n";
+    }
+    else {
+      Update_Tree(0, 0, n, i_l - 1, j_r);
+    }
+  }
+}
