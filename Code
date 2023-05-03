@@ -1,1 +1,95 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
 
+using real = long double;
+//____________________________________________________________________________________
+struct Point {
+  int64_t x;
+  int64_t y;
+  Point() = default;
+  Point(const Point&) = default;
+  ~Point() = default;
+  explicit Point(int64_t x, int64_t y): x(x), y(y) {}
+
+  friend std::ostream& operator<< (std::ostream& output, const Point& A) {
+    output << A.x << ' ' << A.y;
+    return output;
+  }
+};
+
+Point operator+ (const Point& A, const Point& B) {
+  return Point(A.x + B.x, A.y + B.y);
+}
+
+Point operator- (const Point& A, const Point& B) {
+  return Point(A.x - B.x, A.y - B.y);
+}
+
+Point operator* (const Point& A, int64_t k) {
+  return Point(A.x * k, A.y * k);
+}
+
+Point operator/ (const Point& A, real k) { // DIVISIBILITY REQUIRED
+  return Point(A.x / k, A.y / k);
+}
+
+bool operator== (const Point& A, const Point& B) {
+  return ((A.x == B.x) and (A.y == B.y));
+}
+
+bool operator!= (const Point& A, const Point& B) {
+  return !((A.x == B.x) and (A.y == B.y));
+}
+
+real pow_distance(const Point& A, const Point& B) {
+  return std::pow(A.x - B.x, 2) + std::pow(A.y - B.y, 2);
+}
+//____________________________________________________________________________________
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+  std::cout.precision(20);
+
+  uint64_t n, q;
+  std::cin >> n >> q;
+  int64_t x, y;
+  std::vector<Point> sites;
+  for (uint64_t i = 0; i < n; ++i) {
+    std::cin >> x >> y;
+    sites.emplace_back(x, y);
+  }
+
+  for (uint64_t i = 0; i < q; ++i) {
+    std::cin >> x >> y;
+    Point tmp(x, y);
+    real max_dist = 1'000'000'000;
+    std::vector<uint64_t> nearests;
+    nearests.push_back(0);
+    for (uint64_t j = 0; j < n; ++j) {
+      real tmp_dist = pow_distance(sites[j], tmp);
+      if (tmp_dist == max_dist) {
+        nearests.push_back(j);
+        continue;
+      }
+      if (tmp_dist < max_dist) {
+        nearests.clear();
+        nearests.push_back(j);
+        max_dist = tmp_dist;
+        continue;
+      }
+    }
+    uint64_t sz = nearests.size();
+    if (sz >= 3) {
+      std::cout << "POINT\n";
+    }
+    if (sz == 2) {
+      std::cout << "LINE " << nearests[0] + 1 << ' ' << nearests[1] + 1 << '\n';
+    }
+    if (sz == 1) {
+      std::cout << "REGION " << nearests[0] + 1 << '\n';
+    }
+  }
+}
