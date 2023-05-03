@@ -1,1 +1,99 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
+using std::vector;
+using std::cout;
+using std::cin;
+using std::string;
+using std::ios_base;
+using std::pair;
+using std::make_pair;
+using std::min;
+using std::max;
+
+class Node {
+ public:
+  int64_t S = 0;
+  int64_t L = 0, R = 1000000001;
+  int l = -1, r = -1;
+};
+
+vector<Node> Segment_Tree(1);
+
+void In_Place(int64_t v, int64_t ind, int64_t value) {
+  Segment_Tree[v].S += value;
+  if (Segment_Tree[v].L + 1 == Segment_Tree[v].R) {
+    return;
+  }
+  int64_t mid = (Segment_Tree[v].L + Segment_Tree[v].R) / 2;
+  if (ind < mid) {
+    if (Segment_Tree[v].l == -1) {
+      Node new_node;
+      new_node.L = Segment_Tree[v].L;
+      new_node.R = mid;
+      Segment_Tree[v].l = Segment_Tree.size();
+      Segment_Tree.push_back(new_node);
+    }
+    In_Place(Segment_Tree[v].l, ind, value);
+  }
+  else {
+    if (Segment_Tree[v].r == -1) {
+      Node new_node;
+      new_node.L = mid;
+      new_node.R = Segment_Tree[v].R;
+      Segment_Tree[v].r = Segment_Tree.size();
+      Segment_Tree.push_back(new_node);
+    }
+    In_Place(Segment_Tree[v].r, ind, value);
+  }
+}
+
+int64_t Search(int v, int64_t i) {
+  if (Segment_Tree[v].R <= i) {
+    return 0LL;
+  }
+  if (Segment_Tree[v].L >= i) {
+    return Segment_Tree[v].S;
+  }
+  int64_t ans = 0;
+  if (Segment_Tree[v].l != -1) ans += Search(Segment_Tree[v].l, i);
+  if (Segment_Tree[v].r != -1) ans += Search(Segment_Tree[v].r, i);
+  return ans;
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n;
+  cin >> n;
+  vector <pair<int64_t, int64_t>> A(n);
+  for (int i = 0; i < n; ++i) {
+    int l,r;
+    cin >> l >> r;
+    A[i].first = l;
+    A[i].second = r * (-1);
+  }
+  sort(A.begin(), A.end());
+
+  int64_t Answer = 0;
+  for (int i = 0; i < n; ++i) {
+    Answer += Search(0, -static_cast<int64_t>(A[i].second));
+    In_Place(0, A[i].second * (-1), 1LL);
+  }
+
+  int64_t i = 0;
+  int64_t j;
+  while (i < n) {
+    j = i;
+    while ((j < n) && (A[i] == A[j])) {
+      ++j;
+    }
+    Answer -= ((j - i) * (j - i - 1)) / 2;
+    i = j;
+  }
+  cout << Answer;
+}
