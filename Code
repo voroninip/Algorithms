@@ -1,1 +1,110 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <deque>
+#include <queue>
+#include <map>
+#include <set>
+#include <algorithm>
 
+using std::cout;
+using std::cin;
+using std::pair;
+using std::swap;
+using std::set;
+using std::map;
+using std::string;
+using std::vector;
+using std::stack;
+using std::queue;
+
+void dfs(int number, int vertex, vector <vector<int>>& adjacency_list_of,
+         vector <bool>& used, vector <int>& component_of, vector <int>& time_in,
+         vector <int>& time_out, int& time) {
+  used[vertex] = true;
+  component_of[vertex] = number;
+  time_in[vertex] = time++;
+  for (int to : adjacency_list_of[vertex]) {
+    if (!used[to]) {
+      dfs(number, to, adjacency_list_of, used, component_of,
+          time_in, time_out, time);
+    } else {
+      continue;
+    }
+  }
+  time_out[vertex] = time++;
+}
+
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+
+  int n, m;
+  cin >> n >> m;
+  vector <bool> initial_state_of_bulb(n + 1, false); // 0 is fictive
+  bool label;
+  for (int bulb = 1; bulb <= n; ++bulb) {
+    cin >> label;
+    initial_state_of_bulb[bulb] = label;
+  }
+
+  int V = m * 2; // V is the number of vertices in graph
+
+  vector <vector<int>> adjacency_list_of(V + 1, vector <int>()); 
+  // 0 is fictive, 1, 2,..., m are switchers and m+1, m+2,..., m*2 are negatives for switchers
+  vector <vector<int>> switchers_for_bulb(n + 1, vector <int>()); // 0 is fictive
+  int number_of_controlled_bulbs;
+  for (int switcher = 1; switcher <= m; ++switcher) {
+    cin >> number_of_controlled_bulbs;
+    int j;
+    for (int i = 1; i <= number_of_controlled_bulbs; ++i) {
+      cin >> j;
+      switchers_for_bulb[j].push_back(switcher);
+      if (switchers_for_bulb[j].size() == 2) {
+        if (!initial_state_of_bulb[j]) {
+          adjacency_list_of[switchers_for_bulb[j][0]].push_back(switchers_for_bulb[j][1] + m);
+          adjacency_list_of[switchers_for_bulb[j][1] + m].push_back(switchers_for_bulb[j][0]);
+          adjacency_list_of[switchers_for_bulb[j][1]].push_back(switchers_for_bulb[j][0] + m);
+          adjacency_list_of[switchers_for_bulb[j][0] + m].push_back(switchers_for_bulb[j][1]);
+        } else {
+          adjacency_list_of[switchers_for_bulb[j][0]].push_back(switchers_for_bulb[j][1]);
+          adjacency_list_of[switchers_for_bulb[j][1]].push_back(switchers_for_bulb[j][0]);
+          adjacency_list_of[switchers_for_bulb[j][1] + m].push_back(switchers_for_bulb[j][0] + m);
+          adjacency_list_of[switchers_for_bulb[j][0] + m].push_back(switchers_for_bulb[j][1] + m);
+        }
+      }
+    }
+  }
+
+  vector <bool> used(V + 1, false); // 0 is fictive
+  vector <int> time_in(V + 1, 0); // 0 is fictive
+  vector <int> time_out(V + 1, 0); // 0 is fictive
+  int time = 0;
+
+  vector <int> component_of(V + 1, 0); // 0 is fictive
+  int number = 0;
+
+  for (int vertex = 1; vertex <= V; ++vertex) {
+    if (!used[vertex]) {
+      dfs(++number, vertex, adjacency_list_of, used, component_of,
+          time_in, time_out, time);
+    } else {
+      continue;
+    }
+  }
+
+  bool is_satisfiable = true;
+  for (int switcher = 1; switcher <= m; ++switcher) {
+    if (component_of[switcher] == component_of[switcher + m]) {
+      is_satisfiable = false;
+      break;
+    }
+  }
+  if (is_satisfiable) {
+    cout << "YES";
+  } else {
+    cout << "NO";
+  }
+}
