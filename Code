@@ -1,0 +1,79 @@
+#include <cmath>
+#include <iostream>
+#include <vector>
+#include <deque>
+
+using real = long double;
+
+struct Rectangle {
+  int64_t x;
+  int64_t y;
+  int64_t a;
+
+  Rectangle() = default;
+  Rectangle(const Rectangle&) = default;
+  ~Rectangle() = default;
+  explicit Rectangle(int64_t x, int64_t y, int64_t a): x(x), y(y), a(a) {}
+};
+
+struct Line {  // y = kx + b
+  int64_t k;
+  int64_t b;
+
+  Line() = default;
+  Line(const Line&) = default;
+  ~Line() = default;
+  explicit Line(int64_t a, int64_t c): k(a), b(c) {}
+
+  int64_t at_x(int64_t x) const {
+    return k*x + b;
+  }
+};
+
+real intersection_x(Line l, Line m) {
+  return static_cast<real>(m.b - l.b) / static_cast<real>(l.k - m.k);
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+  std::cout.precision(20);
+
+  uint64_t N;
+  std::cin >> N;
+  int64_t x, y;
+  int64_t a;
+  std::vector<Rectangle> rectangles;
+  for (uint64_t i = 0; i < N; ++i) {
+    std::cin >> x >> y >> a;
+    rectangles.emplace_back(x, y, a);
+  }
+
+  auto cmp = [](const Rectangle& A, const Rectangle& B) -> bool {
+    return (A.x < B.x);
+  };
+  std::sort(rectangles.begin(), rectangles.end(), cmp);
+
+  std::deque<Line> hull;
+  hull.emplace_back(Line(0,0));
+  int64_t answer = 0;
+
+  for (int i = 0; i < N; ++i) {
+    int64_t tmp_x = rectangles[i].x;
+    int64_t tmp_y = rectangles[i].y;
+    int64_t tmp_a = rectangles[i].a;
+
+    while ((hull.size() >= 2) and (hull.back().at_x(tmp_y) <= hull[hull.size() - 2].at_x(tmp_y))) {
+      hull.pop_back();
+    }
+    int64_t f = hull.back().at_x(tmp_y) + tmp_x * tmp_y - tmp_a;
+    answer = std::max(answer, f);
+    Line tmp(-rectangles[i].x, f);
+    while ((hull.size() >= 2) and (intersection_x(tmp, hull[0]) >= intersection_x(hull[0], hull[1]))) {
+      hull.pop_front();
+    }
+    hull.push_front(tmp);
+  }
+  std::cout << answer;
+}
