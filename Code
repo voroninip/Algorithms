@@ -1,0 +1,759 @@
+#include <cmath>
+#include <iostream>
+#include <list>
+#include <stack>
+#include <utility>
+#include <vector>
+#include <functional>
+
+using real = long double;
+
+const real PI = 3.14159265358979323846;
+const real E = 2.7182818284590452354;
+
+bool is_0(real x) {
+  return std::abs(x) < 0.000'001;
+}
+
+bool not_greater_0(real x) {
+  return is_0(x) or (x <= static_cast<real>(0));
+}
+
+//____________________________________________________________________________________
+struct Point {
+  int64_t x;
+  int64_t y;
+  Point() = default;
+  Point(const Point&) = default;
+  ~Point() = default;
+  explicit Point(int64_t x, int64_t y): x(x), y(y) {}
+
+  friend std::ostream& operator<< (std::ostream& output, const Point& A) {
+    output << A.x << ' ' << A.y;
+    return output;
+  }
+};
+
+Point operator+ (const Point& A, const Point& B) {
+  return Point(A.x + B.x, A.y + B.y);
+}
+
+Point operator- (const Point& A, const Point& B) {
+  return Point(A.x - B.x, A.y - B.y);
+}
+
+Point operator* (const Point& A, int64_t k) {
+  return Point(A.x * k, A.y * k);
+}
+
+Point operator/ (const Point& A, real k) { // DIVISIBILITY REQUIRED
+  return Point(A.x / k, A.y / k);
+}
+
+bool operator== (const Point& A, const Point& B) {
+  return ((A.x == B.x) and (A.y == B.y));
+}
+
+bool operator!= (const Point& A, const Point& B) {
+  return !((A.x == B.x) and (A.y == B.y));
+}
+//____________________________________________________________________________________
+struct RealPoint {
+  real x;
+  real y;
+  RealPoint() = default;
+  explicit RealPoint(real x, real y): x(x), y(y) {}
+  ~RealPoint() = default;
+  explicit RealPoint(const Point& A): x(static_cast<real>(A.x)), y(static_cast<real>(A.y)) {}
+
+  friend std::ostream& operator<< (std::ostream& output, const RealPoint& A) {
+    output << A.x << ' ' << A.y;
+    return output;
+  }
+};
+
+RealPoint operator+ (const RealPoint& A, const RealPoint& B) {
+  return RealPoint(A.x + B.x, A.y + B.y);
+}
+
+RealPoint operator- (const RealPoint& A, const RealPoint& B) {
+  return RealPoint(A.x - B.x, A.y - B.y);
+}
+
+RealPoint operator* (const RealPoint& A, real k) {
+  return RealPoint(A.x * k, A.y * k);
+}
+
+RealPoint operator/ (const RealPoint& A, real k) {
+  return RealPoint(A.x / k, A.y / k);
+}
+
+bool operator== (const RealPoint& A, const RealPoint& B) {
+  return (is_0(A.x - B.x) and is_0(A.y - B.y));
+}
+//____________________________________________________________________________________
+struct Vector {
+  int64_t x;
+  int64_t y;
+  Vector() = default;
+  Vector(const Vector&) = default;
+  ~Vector() = default;
+  explicit Vector(int64_t x, int64_t y): x(x), y(y) {}
+  explicit Vector(const Point& A): x(A.x), y(A.y) {}
+
+  real length() const noexcept {
+    return std::sqrt(static_cast<real>(x*x + y*y));
+  }
+
+  friend std::ostream& operator<< (std::ostream& output, const Vector& v) {
+    output << v.x << ' ' << v.y;
+    return output;
+  }
+};
+
+Vector operator+ (const Vector& a, const Vector& b) noexcept {
+  return Vector(a.x + b.x, a.y + b.y);
+}
+
+Vector operator- (const Vector& a, const Vector& b) noexcept {
+  return Vector(a.x - b.x, a.y - b.y);
+}
+
+Vector operator* (const Vector& v, int64_t k) {
+  return Vector(v.x * k, v.y * k);
+}
+
+bool operator== (const Vector& a, const Vector& b) {
+  return ((a.x == b.x) and (a.y == b.y));
+}
+
+int64_t scalar_product(const Vector& a, const Vector& b) {
+  return (a.x * b.x + a.y * b.y);
+}
+
+int64_t vector_product(const Vector& a, const Vector& b) {
+  return (a.x * b.y - b.x * a.y);
+}
+//____________________________________________________________________________________
+struct RealVector {
+  real x;
+  real y;
+  RealVector() = default;
+  RealVector(const RealVector&) = default;
+  ~RealVector() = default;
+  explicit RealVector(real x, real y): x(x), y(y) {}
+  explicit RealVector(const RealPoint& A): x(A.x), y(A.y) {}
+  explicit RealVector(const Vector& v): x(static_cast<real>(v.x)), y(static_cast<real>(v.y)) {}
+
+  real length() const noexcept {
+    return sqrtl(static_cast<real>(x*x + y*y));
+  }
+
+  friend std::ostream& operator<< (std::ostream& output, const RealVector& v) {
+    output << v.x << ' ' << v.y;
+    return output;
+  }
+};
+
+RealVector operator+ (const RealVector& a, const RealVector& b) {
+  return RealVector(a.x + b.x, a.y + b.y);
+}
+
+RealVector operator- (const RealVector& a, const RealVector& b) {
+  return RealVector(a.x - b.x, a.y - b.y);
+}
+
+RealVector operator* (const RealVector& v, real k) {
+  return RealVector(v.x * k, v.y * k);
+}
+
+RealVector operator/ (const RealVector& v, real k) {
+  return RealVector(v.x / k, v.y / k);
+}
+
+bool operator== (const RealVector& a, const RealVector& b) {
+  return (is_0(a.x - b.x) and is_0(a.y - b.y));
+}
+
+real scalar_product(const RealVector& a, const RealVector& b) {
+  return (a.x * b.x + a.y * b.y);
+}
+
+real vector_product(const RealVector& a, const RealVector& b) {
+  return (a.x * b.y - b.x * a.y);
+}
+//____________________________________________________________________________________
+struct Line {
+  int64_t a;
+  int64_t b;
+  int64_t c;
+
+  Line() = default;
+  Line(const Line&) = default;
+  ~Line() = default;
+  explicit Line(int64_t a, int64_t b, int64_t c): a(a), b(b), c(c) {}
+  explicit Line(const Point& A, const Vector& v): a(-v.y), b(v.x) {
+    c = v.y * A.x - v.x * A.y;
+  }
+
+  friend std::ostream& operator<< (std::ostream& output, const Line& l) {
+    output << l.a << ' ' << l.b << ' ' << l.c;
+    return output;
+  }
+};
+//____________________________________________________________________________________
+struct RealLine {
+  real a;
+  real b;
+  real c;
+
+  RealLine() = default;
+  RealLine(const RealLine&) = default;
+  ~RealLine() = default;
+  explicit RealLine(real a, real b, real c): a(a), b(b), c(c) {}
+  explicit RealLine(const Line& l): a(static_cast<real>(l.a)),
+  b(static_cast<real>(l.b)), c(static_cast<real>(l.c)) {}
+  explicit RealLine(const RealPoint& A, const RealVector& v): a(-v.y), b(v.x) {
+    c = v.y * A.x - v.x * A.y;
+  }
+
+  friend std::ostream& operator<< (std::ostream& output, const RealLine& l) {
+    output << l.a << ' ' << l.b << ' ' << l.c;
+    return output;
+  }
+};
+//____________________________________________________________________________________
+struct Segment {
+  Point A;
+  Point B;
+
+  Segment() = default;
+  Segment(const Segment&) = default;
+  ~Segment() = default;
+  explicit Segment(const Point& A, const Point& B): A(A), B(B) {}
+
+  real length() const noexcept {
+    return std::sqrt(std::pow(B.x - A.x, 2) + std::pow(B.y - A.y, 2));
+  }
+};
+
+Point midpoint(Segment I) {
+  return (I.A + I.B)/2;
+}
+//____________________________________________________________________________________
+struct RealSegment {
+  RealPoint A;
+  RealPoint B;
+
+  RealSegment() = default;
+  RealSegment(const RealSegment&) = default;
+  ~RealSegment() = default;
+  explicit RealSegment(const Segment& I): A(RealPoint(I.A)), B(RealPoint(I.B)) {}
+  explicit RealSegment(const RealPoint& A, const RealPoint& B): A(A), B(B) {}
+
+  real length() const noexcept {
+    return sqrtl(powl(B.x - A.x, 2) +powl(B.y - A.y, 2));
+  }
+};
+//____________________________________________________________________________________
+real square(const Vector& a, const Vector& b) {
+  return std::abs(static_cast<real>(vector_product(a, b))/2);
+}
+
+real square(const RealVector& a, const RealVector& b) {
+  return std::abs(static_cast<real>(vector_product(a, b))/2);
+}
+
+RealVector normalize(const RealVector& v) {
+  if (is_0(v.x) and is_0(v.y)) {
+    return RealVector(static_cast<real>(0),static_cast<real>(0));
+  } else {
+    return RealVector(v.x / v.length(), v.y / v.length());
+  }
+}
+
+Vector direction(const Line& l) {
+  return Vector(-l.b, l.a);
+}
+
+RealVector direction(const RealLine& l) {
+  return RealVector(-l.b, l.a);
+}
+
+bool are_parallel(const Line& l, const Line& m) {
+  return (vector_product(direction(l), direction(m)) == 0);
+}
+
+bool are_parallel(const RealLine& l, const RealLine& m) {
+  return is_0(vector_product(direction(l), direction(m)));
+}
+
+RealPoint intersection(const RealLine& l, const RealLine& m) {
+  real det = l.a * m.b - l.b * m.a;
+  real det1 = -l.c * m.b + l.b * m.c;
+  real det2 = -l.a * m.c + l.c * m.a;
+  return RealPoint(det1/det, det2/det);
+}
+
+bool on_line(const Point& A, const Line& l) {
+  return (l.a * A.x + l.b * A.y + l.c) == 0;
+}
+
+bool on_line(const RealPoint& A, const RealLine& l) {
+  return is_0(l.a * A.x + l.b * A.y + l.c);
+}
+
+int relatively_line(const Point& A, const Line& l) {
+  int64_t value = l.a * A.x + l.b * A.y + l.c;
+  if (value == 0) {
+    return 0;
+  }
+  if (value > 0) {
+    return 1;
+  }
+  if (value < 0) {
+    return -1;
+  }
+}
+
+int relatively_line(const RealPoint& A, const RealLine& l) {
+  real value = l.a * A.x + l.b * A.y + l.c;
+  if (is_0(value)) {
+    return 0;
+  }
+  if (value > 0) {
+    return 1;
+  }
+  if (value < 0) {
+    return -1;
+  }
+}
+
+real distance(const Point& A, const Line& l) {
+  if (l.a * A.x + l.b * A.y + l.c == 0) {
+    return static_cast<real>(0);
+  } else {
+    return std::abs(static_cast<real>(l.a * A.x + l.b * A.y + l.c)) / 
+    sqrtl(static_cast<real>(l.a * l.a + l.b * l.b));
+  }
+}
+
+real distance(const RealPoint& A, const RealLine& l) {
+  if (is_0(l.a * A.x + l.b * A.y + l.c)) {
+    return static_cast<real>(0);
+  } else {
+    return std::abs(l.a * A.x + l.b * A.y + l.c) / sqrtl(l.a * l.a + l.b * l.b);
+  }
+}
+
+real distance(const RealLine& l, const RealLine& m) {
+  if (is_0(l.a)) {
+    return std::abs((m.b * l.c - m.c * l.b) / (l.b * m.b));
+  }
+  if (is_0(l.b)) {
+    return std::abs((m.a * l.c - m.c * l.a) / (l.a * m.a));
+  }
+  return distance(RealPoint(0, -l.c / l.b), m);
+}
+
+Line containing_line(const Point& A, const Point& B) {
+  return Line(A.y - B.y, B.x - A.x, A.x * B.y - A.y * B.x);
+}
+
+RealLine containing_line(const RealPoint& A, const RealPoint& B) {
+  return RealLine(A.y - B.y, B.x - A.x, A.x * B.y - A.y * B.x);
+}
+
+Line containing_line(const Segment& I) {
+  return containing_line(I.A, I.B);
+}
+
+RealLine containing_line(const RealSegment& I) {
+  return containing_line(I.A, I.B);
+}
+
+bool on_segment(const Point& C, const Segment& I) {
+  if ((C == I.A) or (C == I.B)) {
+    return true;
+  }
+  if (I.A == I.B) {
+    return false;
+  }
+  Line i = containing_line(I);
+  if (!on_line(C, i)) {
+    return false;
+  } else {
+    return ((I.A.x - C.x) * (I.B.x - C.x) <= 0) and ((I.A.y - C.y) * (I.B.y - C.y) <= 0);
+  }
+}
+
+bool inside_segment(const Point& C, const Segment& I) {
+  return vector_product(Vector(C - I.A), Vector(C - I.B)) == 0 and
+  scalar_product(Vector(C - I.A), Vector(C - I.B)) < 0;
+}
+
+bool on_segment(const RealPoint& C, const RealSegment& I) {
+  if ((C == I.A) or (C == I.B)) {
+    return true;
+  }
+  if (I.A == I.B) {
+    return false;
+  }
+  RealLine i = containing_line(I);
+  if (!on_line(C, i)) {
+    return false;
+  } else {
+    return not_greater_0((I.A.x - C.x) * (I.B.x - C.x)) and
+    not_greater_0((I.A.y - C.y) * (I.B.y - C.y));
+  }
+}
+
+bool inside_segment(const RealPoint& C, const RealSegment& I) {
+  return is_0(vector_product(RealVector(C - I.A), RealVector(C - I.B)))
+  and scalar_product(RealVector(C - I.A), RealVector(C - I.B)) < 0;
+}
+
+bool are_intersect(const Segment& I, const Segment& J) {
+  if ((I.A == J.A) or (I.A == J.B) or (I.B == J.B) or (I.B == J.A)) {
+    return true;
+  }
+  if (on_segment(I.A, J) or on_segment(I.B, J) or on_segment(J.A, I) or
+  on_segment(J.B, I)) {
+    return true;
+  }
+  if ((I.A == I.B) or (J.A == J.B)) {
+    return false;
+  }
+
+  Line i = containing_line(I);
+  Line j = containing_line(J);
+
+  if (are_parallel(i, j)) {
+    return false;
+  } else {
+    RealPoint Z = intersection(RealLine(i), RealLine(j));
+    return on_segment(Z, RealSegment(I)) and on_segment(Z, RealSegment(J));
+  }
+}
+
+bool are_intersect(const Line& l, const Segment& I) {
+  if (on_line(I.A, l) or on_line(I.B, l)) {
+    return true;
+  }
+  if (I.A == I.B) {
+    return false;
+  }
+  Line j = Line(containing_line(I));
+  if (are_parallel(l, j)) {
+    return false;
+  } else {
+    RealPoint Z = intersection(RealLine(l), RealLine(j));
+    return on_segment(Z, RealSegment(I));
+  }
+}
+
+bool are_intersect(const RealLine& l, const RealSegment& I) {
+  if (on_line(RealPoint(I.A), l) or on_line(RealPoint(I.B), l)) {
+    return true;
+  }
+  if (I.A == I.B) {
+    return false;
+  }
+  RealLine j = containing_line(I);
+  if (are_parallel(l, j)) {
+    return false;
+  } else {
+    RealPoint Z = intersection(l, j);
+    return on_segment(Z, I);
+  }
+}
+//____________________________________________________________________________________
+struct Polygon {
+  std::vector<Point> vertices;
+  Polygon() = default;
+  ~Polygon() = default;
+  explicit Polygon(std::vector<Point> vertices): vertices(std::move(vertices)) {}
+
+  uint64_t size() const {
+    return vertices.size();
+  }
+
+  bool convex() const noexcept {
+    bool clockwise = true;
+    bool counterclockwise = true;
+    uint64_t N = vertices.size();
+    for (uint64_t i = 1; i <= N; ++i) {
+      if (vector_product(Vector(vertices[(i - 1) % N] - vertices[i % N]),
+                         Vector(vertices[(i + 1) % N] - vertices[i % N])) < 0) {
+        counterclockwise = false;
+        break;
+      }
+    }
+    for (uint64_t i = 1; i <= N; ++i) {
+      if (vector_product(Vector(vertices[(i - 1) % N] - vertices[i % N]),
+                         Vector(vertices[(i + 1) % N] - vertices[i % N])) > 0) {
+        clockwise = false;
+        break;
+      }
+    }
+    return clockwise or counterclockwise;
+  }
+};
+
+Polygon convex_hull(std::vector<Point> S) {
+  std::vector<Point> conv;
+  Point L = S[0];
+  for (auto Tmp : S) {
+    if ((Tmp.x < L.x) or (Tmp.x == L.x and Tmp.y < L.y)) {
+      L = Tmp;
+    }
+  }
+  conv.push_back(L);
+
+  auto cmp =
+      [L = std::cref(L)](const Point& A, const Point& B) -> bool{
+    int64_t rotation = vector_product(Vector(A - L), Vector(B - L));
+    if ((rotation > 0) or (on_segment(A, Segment(L, B)))) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  std::sort(S.begin(), S.end(), cmp);
+  std::list<Point> sorted;
+  sorted.push_back(L);
+  for (auto Tmp : S) {
+    if (Tmp == sorted.back()) {
+      continue;
+    }
+    if (on_segment(sorted.back(), Segment(L, Tmp))) {
+      sorted.pop_back();
+    }
+    sorted.push_back(Tmp);
+  }
+
+  for (auto tmp : sorted) {
+    while (conv.size() > 2) {
+      Point last = conv.back();
+      Point prev = conv[conv.size() - 2];
+      int64_t rotation = vector_product(Vector(last - prev),
+                                        Vector(tmp - prev));
+      if (rotation < 0) {
+        conv.pop_back();
+        continue;
+      }
+      if (rotation == 0) {
+        conv.pop_back();
+        break;
+      }
+      if (rotation > 0) {
+        break;
+      }
+    }
+    conv.push_back(tmp);
+  }
+  return Polygon(conv);
+}
+
+Polygon convex_hull(const Polygon& P) {
+  return convex_hull(P.vertices);
+}
+
+/*
+bool separable_line(Line l, const std::vector<Point>& S) {
+    Polygon conv = convex_hull(S);
+    std::vector<Vector> sides(conv.size());
+    for (uint64_t i = 0; i < conv.size(); ++i) {
+        sides.emplace_back(conv.vertices[i + 1] - conv.vertices[i]);
+    }
+    sides.emplace_back(conv.vertices[0] - conv.vertices[conv.size()]);
+
+    auto cmp = [l = std::cref(l)](const Vector& a) -> bool{
+        int64_t rotation = vector_product(Vector(a - L), Vector(B - L));
+        if ((rotation > 0) or (on_segment(a, Segment(L, B)))) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    std::lower_bound(sides.begin(), sides.end(), cmp);
+}
+*/
+//______________________________________________________________________________________________________________________
+struct RealPolygon {
+  uint64_t N = 0;
+  std::vector<RealPoint> vertices;
+  RealPolygon() = default;
+  ~RealPolygon() = default;
+  explicit RealPolygon(std::vector<RealPoint> vertices): N(vertices.size()),
+  vertices(std::move(vertices)) {}
+
+  bool convex() const noexcept {
+    bool clockwise = true;
+    bool counterclockwise = true;
+    for (uint64_t i = 1; i <= N; ++i) {
+      if (vector_product(RealVector(vertices[(i - 1) % N] - vertices[i % N]),
+                         RealVector(vertices[(i + 1) % N] - vertices[i % N])) < 0) {
+        counterclockwise = false;
+        break;
+      }
+    }
+    for (uint64_t i = 1; i <= N; ++i) {
+      if (vector_product(RealVector(vertices[(i - 1) % N] - vertices[i % N]),
+                         RealVector(vertices[(i + 1) % N] - vertices[i % N])) > 0) {
+        clockwise = false;
+        break;
+      }
+    }
+    return clockwise or counterclockwise;
+  }
+};
+//____________________________________________________________________________________
+enum class Location {
+  INSIDE, BOUNDARY, OUTSIDE
+};
+
+std::ostream& operator<< (std::ostream& output, const Location& WHERE) {
+  switch (WHERE) {
+    case Location::INSIDE:
+      output << "INSIDE";
+      break;
+    case Location::OUTSIDE:
+      output << "OUTSIDE";
+      break;
+    case Location::BOUNDARY:
+      output << "BOUNDARY";
+      break;
+  }
+  return output;
+}
+
+Location relatively_polygon(const Point& C, const Polygon& P) {
+  bool inside = false;
+  uint64_t N = P.size();
+  for (uint64_t i = 0; i < N; ++i) {
+    Segment I(P.vertices[i % N], P.vertices[(i + 1) % N]);
+    Point U = (I.A.y >= I.B.y ? I.A : I.B);
+    Point D = (I.A.y < I.B.y ? I.A : I.B);
+
+    if (/*(C == I.A) or (C == I.B) or */on_segment(C, I)) {
+      return Location::BOUNDARY;
+    } else {
+      if ((D.y > C.y) or (U.y <= C.y)) { // horizon through C
+        continue;
+      } else {
+        if (vector_product(Vector(C - D), Vector(U - D)) <= 0) {
+          inside = !inside;
+        }
+      }
+    }
+  }
+  return (inside ? Location::INSIDE : Location::OUTSIDE);
+}
+
+Location relatively_polygon(const RealPoint& A, const RealPolygon& P) {
+  //std::random_device dev;
+  //std::mt19937 rng(dev());
+  //std::uniform_int_distribution<std::mt19937::result_type> dist6(-1'000'000'000,-2'000'000'000); // distribution in range
+  //Segment rand(C, Point(500'000'000, 500'000'001));
+  RealVector rand(PI, E); // transcendent
+  RealLine ray(RealPoint(A), rand);
+  bool inside = false;
+  for (uint64_t i = 0; i < P.N; ++i) {
+    RealSegment I(P.vertices[i % P.N], P.vertices[(i + 1) % P.N]);
+    if ((A == I.A) or (A == I.B) or on_segment(A, I)) {
+      return Location::BOUNDARY;
+    } else {
+      if (are_intersect(ray, I)) {
+        RealPoint Z = intersection(ray, RealLine(containing_line(I)));
+        if (!not_greater_0(scalar_product(RealVector(rand), RealVector(Z - A)))) {
+          inside = !inside;
+        }
+      }
+    }
+  }
+  return (inside ? Location::INSIDE : Location::OUTSIDE);
+}
+
+bool is_diagonal(const Segment& I, const Polygon& P) {
+  uint64_t N = P.size();
+  if (relatively_polygon(midpoint(I), P) != Location::INSIDE) {
+    // in assumption that midpoint is integer Point
+    return false;
+  }
+  for (uint64_t i = 0; i < N; ++i) {
+    Point C = P.vertices[i % N];
+    Point D = P.vertices[(i + 1) % N];
+    if ((C != I.A) and (C != I.B) and (D != I.A) and (D != I.B)) {
+      Segment CD(C, D);
+      if (on_segment(C, I) or on_segment(D, I)) {
+        return false;
+      }
+      if ((relatively_line(C, containing_line(I)) * relatively_line(D, containing_line(I)) < 0)
+          and (relatively_line(I.A, containing_line(CD)) * relatively_line(I.B,
+                                                                           containing_line(CD)) < 0))  {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+uint64_t number_of_triangulations(const Polygon& P, uint64_t mod) {
+  uint64_t N = P.size();
+  std::vector<std::vector<uint64_t>> Triang (N, std::vector<uint64_t>(N)); 
+  // Triang is number of triangulations
+
+  for (uint64_t k = 1; k <= N - 1; ++k) { // shift
+    for (uint64_t i = 0; i <= N - 1 ; ++i) { // index of starting vertex
+      if (k == 1) { // side
+        Triang[i % N][(i + 1) % N] = 1;
+        continue;
+      }
+      if (k == N-1) { // side
+        for (uint64_t j = (i + 1) % N; j % N != (i + N - 1) % N; ++j) {
+          Triang[i % N][(i + N - 1) % N] += ((Triang[i % N][j % N] % mod) *
+              (Triang[j % N][(i + N - 1) % N] % mod)) % mod;
+          Triang[i % N][(i + N - 1) % N] %= mod;
+        }
+        continue;
+      }
+      Segment I(P.vertices[i % N], P.vertices[(i + k) % N]); // is_diagonal?
+      if (!is_diagonal(I, P)) {
+        Triang[i % N][(i + k) % N] = 0;
+        continue;
+      }
+      for (uint64_t j = (i + 1) % N; j % N != (i + k) % N; ++j) {
+        Triang[i % N][(i + k) % N] += ((Triang[i % N][j % N] % mod) *
+            (Triang[j % N][(i + k) % N]) % mod) % mod;
+        Triang[i % N][(i + k) % N] %= mod;
+      }
+    }
+  }
+  // return Triang;
+  return Triang[0][N-1] % mod;
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+  std::cout.precision(20);
+
+  uint64_t N;
+  std::cin >> N;
+  int64_t x, y;
+  std::vector<Point> vertices;
+  vertices.reserve(N);
+  for (int64_t i = 0; i < N; ++i) {
+    std::cin >> x >> y;
+    /*Point tmp(2*x, 2*y); // unnecessary - polygon is simple
+    if (i >= 1 and tmp == vertices[i-1]) {
+        continue;
+    }*/
+    vertices.emplace_back(2*x, 2*y); // for integer midpoints
+  }
+  std::cout << number_of_triangulations(Polygon(vertices), 1'000'000'007);
+}
