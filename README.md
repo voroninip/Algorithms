@@ -1,2 +1,2 @@
-## Задачи на код-ревью. 
-Пример: D5 - задача D из контеста номер 5
+## Посылка: 
+https://codeforces.com/group/PVbQ8eK2T4/contest/410459/submission/204463374
