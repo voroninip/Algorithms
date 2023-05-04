@@ -1,0 +1,200 @@
+#include <algorithm>
+#include <iostream>
+#include <random>
+#include <utility>
+#include <vector>
+
+//____________________________________________________________________________________
+struct Point {
+  int64_t x;
+  int64_t y;
+  Point() = default;
+  Point(const Point&) = default;
+  ~Point() = default;
+  explicit Point(int64_t x, int64_t y): x(x), y(y) {}
+
+  friend std::ostream& operator<< (std::ostream& output, const Point& A) {
+    output << A.x << ' ' << A.y;
+    return output;
+  }
+};
+
+Point operator+ (const Point& A, const Point& B) noexcept {
+  return Point(A.x + B.x, A.y + B.y);
+}
+
+Point operator- (const Point& A, const Point& B) noexcept {
+  return Point(A.x - B.x, A.y - B.y);
+}
+
+Point operator* (const Point& A, int64_t k) {
+  return Point(A.x * k, A.y * k);
+}
+
+bool operator== (const Point& A, const Point& B) {
+  return ((A.x == B.x) and (A.y == B.y));
+}
+//____________________________________________________________________________________
+struct Vector {
+  int64_t x;
+  int64_t y;
+  Vector() = default;
+  Vector(const Vector&) = default;
+  ~Vector() = default;
+  explicit Vector(int64_t x, int64_t y): x(x), y(y) {}
+  explicit Vector(const Point& A): x(A.x), y(A.y) {}
+
+  friend std::ostream& operator<< (std::ostream& output, const Vector& v) {
+    output << v.x << ' ' << v.y;
+    return output;
+  }
+};
+
+Vector operator+ (const Vector& a, const Vector& b) noexcept {
+  return Vector(a.x + b.x, a.y + b.y);
+}
+
+Vector operator- (const Vector& a, const Vector& b) noexcept {
+  return Vector(a.x - b.x, a.y - b.y);
+}
+
+Vector operator* (const Vector& v, int64_t k) {
+  return Vector(v.x * k, v.y * k);
+}
+
+bool operator== (const Vector& a, const Vector& b) {
+  return ((a.x == b.x) and (a.y == b.y));
+}
+//____________________________________________________________________________________
+struct Line {
+  int64_t a;
+  int64_t b;
+  int64_t c;
+
+  Line() = default;
+  Line(const Line&) = default;
+  ~Line() = default;
+  explicit Line(int64_t a, int64_t b, int64_t c): a(a), b(b), c(c) {}
+
+  friend std::ostream& operator<< (std::ostream& output, const Line& l) {
+    output << l.a << ' ' << l.b << ' ' << l.c;
+    return output;
+  }
+};
+//____________________________________________________________________________________
+struct Segment {
+  Point A;
+  Point B;
+
+  Segment() = default;
+  Segment(const Segment&) = default;
+  ~Segment() = default;
+  explicit Segment(const Point& A, const Point& B): A(A), B(B) {}
+};
+//____________________________________________________________________________________
+int64_t vector_product(const Vector& a, const Vector& b) noexcept {
+  return (a.x * b.y - b.x * a.y);
+}
+
+bool on_line(const Point& A, const Line& l) {
+  return (l.a * A.x + l.b * A.y + l.c == 0);
+}
+
+Line containing_line(const Point& A, const Point& B) {
+  return Line(A.y - B.y, B.x - A.x, A.x * B.y - A.y * B.x);
+}
+
+Line containing_line(const Segment& I) {
+  return containing_line(I.A, I.B);
+}
+
+bool on_segment(const Point& C, const Segment& I) {
+  if ((C == I.A) or (C == I.B)) {
+    return true;
+  }
+  if (I.A == I.B) {
+    return false;
+  }
+  Line i = containing_line(I);
+  if (!on_line(C, i)) {
+    return false;
+  } else {
+    return ((I.A.x - C.x) * (I.B.x - C.x) <= 0) and ((I.A.y - C.y) * (I.B.y - C.y) <= 0);
+  }
+}
+//______________________________________________________________________________________________________________________
+struct Polygon {
+  uint64_t N = 0;
+  std::vector<Point> vertices;
+  Polygon() = default;
+  ~Polygon() = default;
+  explicit Polygon(std::vector<Point> vertices): N(vertices.size()), vertices(std::move(vertices)) {}
+};
+//____________________________________________________________________________________
+enum class Location {
+  INSIDE, BOUNDARY, OUTSIDE
+};
+
+std::ostream& operator<< (std::ostream& output, const Location& WHERE) {
+  switch (WHERE) {
+    case Location::INSIDE:
+      output << "INSIDE";
+      break;
+    case Location::OUTSIDE:
+      output << "OUTSIDE";
+      break;
+    case Location::BOUNDARY:
+      output << "BOUNDARY";
+      break;
+  }
+  return output;
+}
+
+Location relatively_polygon(const Point& C, const Polygon& P) {
+  //std::random_device dev;
+  //std::mt19937 rng(dev());
+  //std::uniform_int_distribution<std::mt19937::result_type> dist6(-1'000'000'000,-2'000'000'000); // distribution in range
+  //Segment rand(C, Point(500'000'000, 500'000'001));
+  bool inside = false;
+  for (uint64_t i = 0; i < P.N; ++i) {
+    Segment I(P.vertices[i % P.N], P.vertices[(i + 1) % P.N]);
+    Point U = (I.A.y >= I.B.y ? I.A : I.B);
+    Point D = (I.A.y < I.B.y ? I.A : I.B);
+
+    if ((C == I.A) or (C == I.B) or on_segment(C, I)) {
+      return Location::BOUNDARY;
+    } else {
+      if ((D.y > C.y) or (U.y <= C.y)) { // horizon(1, 0)
+        continue;
+      } else {
+        if (vector_product(Vector(C - D), Vector(U - D)) <= 0) {
+          inside = !inside;
+        }
+      }
+    }
+  }
+  return (inside ? Location::INSIDE : Location::OUTSIDE);
+}
+
+int main() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
+  std::cout.precision(20);
+
+  uint64_t N, M;
+  std::cin >> N >> M;
+  int64_t x, y;
+  std::vector<Point> vertices;
+  for (uint64_t i = 0; i < N; ++i) {
+    std::cin >> x >> y;
+    vertices.emplace_back(x, y);}
+
+  Polygon P(std::move(vertices));
+
+  for (uint64_t i = 0; i < M; ++i) {
+    std::cin >> x >> y;
+    Point A(x, y);
+    std::cout << relatively_polygon(A, P) << '\n';
+  }
+}
